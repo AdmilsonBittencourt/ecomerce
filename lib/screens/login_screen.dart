@@ -98,7 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Por enquanto, apenas navega para a tela Home
                   Navigator.pushReplacement( // Usa pushReplacement para não permitir voltar para o login
                     context,
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
                   );
                 },
                 style: ElevatedButton.styleFrom(

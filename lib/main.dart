@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:perfumes_ecomerce/screens/welcome_screen.dart'; // Importa a tela de boas-vindas
+import 'package:perfumes_ecomerce/screens/welcome_screen.dart';
+import 'package:perfumes_ecomerce/cart_manager.dart'; // Importa o gerenciador de carrinho
+import 'package:provider/provider.dart'; // Importa o pacote provider
 
 void main() {
   runApp(const MyApp());
@@ -10,14 +12,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Perfumaria Essência', // Título que aparece no gerenciador de tarefas/aplicativos
-      debugShowCheckedModeBanner: false, // Remove a faixa de "Debug"
-      theme: ThemeData(
-        primarySwatch: Colors.blue, // Definimos uma cor primária padrão, mas o design será minimalista
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    // Envolve todo o aplicativo com ChangeNotifierProvider para disponibilizar o CartManager
+    return ChangeNotifierProvider(
+      create: (context) => CartManager(), // Cria uma instância do CartManager
+      child: MaterialApp(
+        title: 'Perfumaria Essência',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: const WelcomeScreen(),
       ),
-      home: const WelcomeScreen(), // Define a WelcomeScreen como a tela inicial
     );
   }
 }

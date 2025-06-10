@@ -206,8 +206,8 @@ void initState() {
                       minWidth: 12,
                       minHeight: 12,
                     ),
-                    child: const Text(
-                      '',
+                    child: Text(
+                      _foundPerfumes.length.toString(),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 8,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:perfumes_ecomerce/cart_manager.dart'; // Importa o nosso gerenciador de carrinho
 import 'package:perfumes_ecomerce/models/cart_item.dart'; // Importa o modelo CartItem
+import 'package:perfumes_ecomerce/screens/checkout_screen.dart'; // Importa a tela de checkout
 
 // Para consumir o ChangeNotifier, vamos usar o pacote Provider.
 // Se ainda não adicionou, adicione ao seu pubspec.yaml:
@@ -218,11 +219,11 @@ class CartScreen extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: () {
                           if (cartManager.itemCount > 0) {
-                             ScaffoldMessenger.of(context).showSnackBar(
-                               const SnackBar(content: Text('Finalizando compra! (em breve!)')),
-                             );
-                             // TODO: Navegar para a tela de checkout
-                             cartManager.clearCart(); // Limpa o carrinho após "finalizar"
+                            // Navega para a tela de Checkout
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const CheckoutScreen()),
+                            );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Seu carrinho está vazio!')),

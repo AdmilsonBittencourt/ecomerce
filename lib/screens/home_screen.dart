@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:perfumes_ecomerce/screens/welcome_screen.dart'; // Importa a tela de boas-vindas para o logout
 import 'package:perfumes_ecomerce/models/perfume.dart'; // Importa nosso modelo de Perfume
-
+import 'package:perfumes_ecomerce/screens/profile_screen.dart'; // Importa a tela de perfil
 // A Home Screen agora será um StatefulWidget para gerenciar o estado da pesquisa
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -102,10 +102,10 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.person_outline, color: Colors.black87),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tela de Perfil (em breve!)')),
+               Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
               );
-              // TODO: Navegar para a tela de perfil do usuário
             },
           ),
           // Ícone de Carrinho de Compras
@@ -159,10 +159,10 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('Meu Perfil'),
               onTap: () {
                 Navigator.pop(context); // Fecha o drawer
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Navegar para Meu Perfil')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
                 );
-                // TODO: Navegar para a tela de perfil
               },
             ),
             ListTile(

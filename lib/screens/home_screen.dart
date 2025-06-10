@@ -4,6 +4,7 @@ import 'package:perfumes_ecomerce/models/perfume.dart'; // Importa nosso modelo 
 import 'package:perfumes_ecomerce/screens/profile_screen.dart'; // Importa a tela de perfil
 import 'package:perfumes_ecomerce/screens/product_detail_screen.dart'; // Importa a tela de detalhes do produto
 import 'package:perfumes_ecomerce/screens/cart_screen.dart'; // Importa a tela do carrinho
+import 'package:perfumes_ecomerce/screens/my_orders_screen.dart'; // Importa a tela de Meus Pedidos
 
 // A Home Screen agora será um StatefulWidget para gerenciar o estado da pesquisa
 class HomeScreen extends StatefulWidget {
@@ -18,7 +19,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Perfume> _allPerfumes = [
     Perfume(
       name: 'Perfume Elegance',
-      imageUrl: 'https://via.placeholder.com/200/A3B8B8/FFFFFF?text=Perfume1', // Imagens maiores para a grade
+      imageUrl:
+          'https://via.placeholder.com/200/A3B8B8/FFFFFF?text=Perfume1', // Imagens maiores para a grade
       price: 199.99,
     ),
     Perfume(
@@ -71,7 +73,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _foundPerfumes = _allPerfumes; // Inicialmente, mostra todos os perfumes
-    _searchController.addListener(_onSearchChanged); // Ouve mudanças no campo de pesquisa
+    _searchController
+        .addListener(_onSearchChanged); // Ouve mudanças no campo de pesquisa
   }
 
   @override
@@ -92,8 +95,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (searchTerm.isEmpty) {
       results = _allPerfumes;
     } else {
-      results = _allPerfumes.where((perfume) =>
-          perfume.name.toLowerCase().contains(searchTerm.toLowerCase())).toList();
+      results = _allPerfumes
+          .where((perfume) =>
+              perfume.name.toLowerCase().contains(searchTerm.toLowerCase()))
+          .toList();
     }
 
     // Atualiza a UI com os resultados filtrados
@@ -106,7 +111,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfumaria Essência', style: TextStyle(color: Colors.black87)),
+        title: const Text('Perfumaria Essência',
+            style: TextStyle(color: Colors.black87)),
         backgroundColor: Colors.white,
         elevation: 0,
         // O leading (ícone de menu) é automaticamente adicionado quando um Drawer está presente
@@ -123,9 +129,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           // Ícone de Carrinho de Compras
           IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined, color: Colors.black87),
+            icon:
+                const Icon(Icons.shopping_cart_outlined, color: Colors.black87),
             onPressed: () {
-               Navigator.push(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const CartScreen()),
               );
@@ -138,7 +145,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const DrawerHeader( // Adicionado 'const' aqui
+            const DrawerHeader(
+              // Adicionado 'const' aqui
               decoration: BoxDecoration(
                 color: Colors.black87,
               ),
@@ -174,7 +182,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.pop(context); // Fecha o drawer
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const ProfileScreen()),
                 );
               },
             ),
@@ -183,10 +192,11 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('Meus Pedidos'),
               onTap: () {
                 Navigator.pop(context); // Fecha o drawer
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Navegar para Meus Pedidos')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const MyOrdersScreen()),
                 );
-                // TODO: Navegar para a tela de pedidos
               },
             ),
             ListTile(
@@ -203,12 +213,14 @@ class _HomeScreenState extends State<HomeScreen> {
             const Divider(), // Uma linha divisória
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),
-              title: const Text('Sair', style: TextStyle(color: Colors.redAccent)),
+              title:
+                  const Text('Sair', style: TextStyle(color: Colors.redAccent)),
               onTap: () {
                 Navigator.pop(context); // Fecha o drawer antes de sair
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const WelcomeScreen()),
                   (Route<dynamic> route) => false,
                 );
               },
@@ -217,7 +229,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // Alinha os filhos à esquerda
+        crossAxisAlignment:
+            CrossAxisAlignment.start, // Alinha os filhos à esquerda
         children: <Widget>[
           // Campo de Pesquisa
           Padding(
@@ -229,10 +242,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 prefixIcon: const Icon(Icons.search, color: Colors.black54),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none, // Sem borda para um look mais limpo
+                  borderSide:
+                      BorderSide.none, // Sem borda para um look mais limpo
                 ),
                 filled: true,
-                fillColor: Colors.grey[200], // Fundo cinza claro para a barra de pesquisa
+                fillColor: Colors
+                    .grey[200], // Fundo cinza claro para a barra de pesquisa
                 contentPadding: const EdgeInsets.symmetric(vertical: 15.0),
               ),
               onChanged: (value) {
@@ -249,13 +264,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(fontSize: 18, color: Colors.black54),
                     ),
                   )
-                : GridView.builder( // Mantido o GridView.builder
-                    padding: const EdgeInsets.all(16.0), // Padding em volta da grade
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                : GridView.builder(
+                    // Mantido o GridView.builder
+                    padding:
+                        const EdgeInsets.all(16.0), // Padding em volta da grade
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2, // Duas colunas
-                      crossAxisSpacing: 16.0, // Espaçamento horizontal entre os itens
-                      mainAxisSpacing: 16.0, // Espaçamento vertical entre as linhas
-                      childAspectRatio: 0.7, // Proporção largura/altura de cada item
+                      crossAxisSpacing:
+                          16.0, // Espaçamento horizontal entre os itens
+                      mainAxisSpacing:
+                          16.0, // Espaçamento vertical entre as linhas
+                      childAspectRatio:
+                          0.7, // Proporção largura/altura de cada item
                     ),
                     itemCount: _foundPerfumes.length,
                     itemBuilder: (context, index) {
@@ -266,24 +287,32 @@ class _HomeScreenState extends State<HomeScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: InkWell( // Permite que o card seja clicável
+                        child: InkWell(
+                          // Permite que o card seja clicável
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ProductDetailScreen(perfume: perfume), // Passa o objeto perfume
+                                builder: (context) => ProductDetailScreen(
+                                    perfume: perfume), // Passa o objeto perfume
                               ),
                             );
                           },
-                          child: Column( // Alterado para Column para empilhar imagem, nome e preço
-                            crossAxisAlignment: CrossAxisAlignment.start, // Alinha o texto à esquerda
+                          child: Column(
+                            // Alterado para Column para empilhar imagem, nome e preço
+                            crossAxisAlignment: CrossAxisAlignment
+                                .start, // Alinha o texto à esquerda
                             children: <Widget>[
-                              Expanded( // A imagem ocupa o espaço disponível na altura
+                              Expanded(
+                                // A imagem ocupa o espaço disponível na altura
                                 child: ClipRRect(
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)), // Apenas bordas superiores arredondadas
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(
+                                          10)), // Apenas bordas superiores arredondadas
                                   child: Image.network(
                                     perfume.imageUrl,
-                                    width: double.infinity, // Ocupa a largura total do card
+                                    width: double
+                                        .infinity, // Ocupa a largura total do card
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
                                       return const Icon(
@@ -308,7 +337,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                         color: Colors.black87,
                                       ),
                                       maxLines: 1, // Limita o texto a uma linha
-                                      overflow: TextOverflow.ellipsis, // Adiciona "..." se o texto for muito longo
+                                      overflow: TextOverflow
+                                          .ellipsis, // Adiciona "..." se o texto for muito longo
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -321,13 +351,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                 ),
                               ),
-                              Align( // Alinha o botão "adicionar" ao final do card
+                              Align(
+                                // Alinha o botão "adicionar" ao final do card
                                 alignment: Alignment.bottomRight,
                                 child: IconButton(
-                                  icon: const Icon(Icons.add_shopping_cart, color: Colors.black87),
+                                  icon: const Icon(Icons.add_shopping_cart,
+                                      color: Colors.black87),
                                   onPressed: () {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('"${perfume.name}" adicionado ao carrinho!')),
+                                      SnackBar(
+                                          content: Text(
+                                              '"${perfume.name}" adicionado ao carrinho!')),
                                     );
                                   },
                                 ),

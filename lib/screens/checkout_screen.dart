@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:perfumes_ecomerce/cart_manager.dart';
 import 'package:provider/provider.dart';
+import 'package:perfumes_ecomerce/order_manager.dart'; // Importa o gerenciador de pedidos
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -10,7 +11,8 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  final _formKey = GlobalKey<FormState>(); // Chave para o formulário para validação
+  final _formKey =
+      GlobalKey<FormState>(); // Chave para o formulário para validação
 
   // Controladores para os campos de endereço
   final TextEditingController _streetController = TextEditingController();
@@ -19,7 +21,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _stateController = TextEditingController();
   final TextEditingController _zipCodeController = TextEditingController();
-  final TextEditingController _complementController = TextEditingController(); // Complemento opcional
+  final TextEditingController _complementController =
+      TextEditingController(); // Complemento opcional
 
   // Variável para a forma de pagamento selecionada
   String? _selectedPaymentMethod;
@@ -38,10 +41,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   void _confirmOrder() {
-    if (_formKey.currentState!.validate()) { // Valida todos os campos do formulário
+    if (_formKey.currentState!.validate()) {
+      // Valida todos os campos do formulário
       if (_selectedPaymentMethod == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor, selecione uma forma de pagamento.')),
+          const SnackBar(
+              content: Text('Por favor, selecione uma forma de pagamento.')),
         );
         return;
       }
@@ -63,37 +68,72 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           'zipCode': _zipCodeController.text,
         },
         'paymentMethod': _selectedPaymentMethod,
-        'items': cartManager.items.map((item) => {
-              'perfumeName': item.perfume.name,
-              'quantity': item.quantity,
-              'pricePerUnit': item.perfume.price,
-              'totalItemPrice': item.totalPrice,
-            }).toList(),
+        'items': cartManager.items
+            .map((item) => {
+                  'perfumeName': item.perfume.name,
+                  'quantity': item.quantity,
+                  'pricePerUnit': item.perfume.price,
+                  'totalItemPrice': item.totalPrice,
+                })
+            .toList(),
         'timestamp': DateTime.now().toIso8601String(),
       };
 
-      // Limpa o carrinho
+      //Pega a instância do OrderManager
+      final orderManager = Provider.of<OrderManager>(context, listen: false);
+
+      //Adiciona o pedido ao OrderManager
+      orderManager.addOrder(
+        items: cartManager.items
+            .map((item) => {
+                  // Passa os itens do carrinho como Map
+                  'perfumeName': item.perfume.name,
+                  'quantity': item.quantity,
+                  'pricePerUnit': item.perfume.price,
+                  'totalItemPrice': item.totalPrice,
+                  // Você pode adicionar mais detalhes do perfume aqui se precisar para o OrderManager
+                })
+            .toList(),
+        addressDetails: {
+          'street': _streetController.text,
+          'number': _numberController.text,
+          'neighborhood': _neighborhoodController.text,
+          'complement': _complementController.text,
+          'city': _cityController.text,
+          'state': _stateController.text,
+          'zipCode': _zipCodeController.text,
+        },
+        paymentMethod: _selectedPaymentMethod!, // ! garante que não é null
+        totalAmount: orderTotal,
+      );
+
+// Limpa o carrinho
       cartManager.clearCart();
 
-      // Exibe uma mensagem de sucesso
+// Exibe uma mensagem de sucesso
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pedido Finalizado com Sucesso!')),
       );
 
       print('Detalhes do Pedido: $orderDetails'); // Para debug
 
-      // Opcional: Navegar para uma tela de confirmação de pedido ou para a Home
-      Navigator.popUntil(context, (route) => route.isFirst); // Volta para a primeira tela (Welcome ou Home)
+// Opcional: Navegar para uma tela de confirmação de pedido ou para a Home
+      Navigator.popUntil(
+          context,
+          (route) =>
+              route.isFirst); // Volta para a primeira tela (Welcome ou Home)
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final cartManager = Provider.of<CartManager>(context); // Para exibir o total
+    final cartManager =
+        Provider.of<CartManager>(context); // Para exibir o total
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Finalizar Pedido', style: TextStyle(color: Colors.black87)),
+        title: const Text('Finalizar Pedido',
+            style: TextStyle(color: Colors.black87)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
@@ -232,7 +272,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, informe o CEP.';
                   }
-                  if (value.length != 8) { // Ex: 12345678 (sem hífen)
+                  if (value.length != 8) {
+                    // Ex: 12345678 (sem hífen)
                     return 'O CEP deve ter 8 dígitos.';
                   }
                   return null;
@@ -286,11 +327,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   children: [
                     const Text(
                       'Total a Pagar:',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87),
                     ),
                     Text(
                       'R\$ ${cartManager.totalPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87),
                     ),
                   ],
                 ),

@@ -5,6 +5,7 @@ import 'package:perfumes_ecomerce/screens/profile_screen.dart'; // Importa a tel
 import 'package:perfumes_ecomerce/screens/product_detail_screen.dart'; // Importa a tela de detalhes do produto
 import 'package:perfumes_ecomerce/screens/cart_screen.dart'; // Importa a tela do carrinho
 import 'package:perfumes_ecomerce/screens/my_orders_screen.dart'; // Importa a tela de Meus Pedidos
+import 'package:perfumes_ecomerce/screens/filter_screen.dart'; // Importa a tela de filtros e o modelo PerfumeFilters
 
 // A Home Screen agora será um StatefulWidget para gerenciar o estado da pesquisa
 class HomeScreen extends StatefulWidget {
@@ -19,63 +20,92 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Perfume> _allPerfumes = [
     Perfume(
       name: 'Perfume Elegance',
-      imageUrl:
-          'https://via.placeholder.com/200/A3B8B8/FFFFFF?text=Perfume1', // Imagens maiores para a grade
+      imageUrl: 'https://via.placeholder.com/200/A3B8B8/FFFFFF?text=Perfume1',
       price: 199.99,
+      brand: 'Luxury Scents', // Adicionado
+      gender: 'Feminino', // Adicionado
     ),
     Perfume(
       name: 'Essência Noturna',
       imageUrl: 'https://via.placeholder.com/200/8D9898/FFFFFF?text=Perfume2',
       price: 249.90,
+      brand: 'Urban Aura',
+      gender: 'Masculino',
     ),
     Perfume(
       name: 'Aroma da Primavera',
       imageUrl: 'https://via.placeholder.com/200/C6D8D8/000000?text=Perfume3',
       price: 150.00,
+      brand: 'Nature Inspired',
+      gender: 'Unissex',
     ),
     Perfume(
       name: 'Toque Amadeirado',
       imageUrl: 'https://via.placeholder.com/200/667373/FFFFFF?text=Perfume4',
       price: 280.50,
+      brand: 'Luxury Scents',
+      gender: 'Masculino',
     ),
     Perfume(
       name: 'Doce Tentação',
       imageUrl: 'https://via.placeholder.com/200/A7B8B8/FFFFFF?text=Perfume5',
       price: 175.25,
+      brand: 'Urban Aura',
+      gender: 'Feminino',
     ),
     Perfume(
       name: 'Mistério Oriental',
       imageUrl: 'https://via.placeholder.com/200/9F8B9B/FFFFFF?text=Perfume6',
       price: 320.00,
+      brand: 'Exotic Delights',
+      gender: 'Unissex',
     ),
     Perfume(
       name: 'Frescor do Oceano',
       imageUrl: 'https://via.placeholder.com/200/B8D8D8/000000?text=Perfume7',
       price: 210.00,
+      brand: 'Nature Inspired',
+      gender: 'Masculino',
     ),
     Perfume(
       name: 'Sonho Dourado',
       imageUrl: 'https://via.placeholder.com/200/FFD700/000000?text=Perfume8',
       price: 270.00,
+      brand: 'Luxury Scents',
+      gender: 'Feminino',
     ),
     Perfume(
       name: 'Poder Urbano',
       imageUrl: 'https://via.placeholder.com/200/404040/FFFFFF?text=Perfume9',
       price: 295.00,
+      brand: 'Urban Aura',
+      gender: 'Masculino',
+    ),
+    Perfume(
+      // Adicione mais um para ter mais opções
+      name: 'Flor do Campo',
+      imageUrl: 'https://via.placeholder.com/200/E6E6FA/000000?text=Perfume10',
+      price: 180.00,
+      brand: 'Nature Inspired',
+      gender: 'Feminino',
     ),
   ];
+
+  PerfumeFilters _currentFilters =
+      PerfumeFilters(); // Inicializa com filtros padrão (nenhum filtro ativo)
 
   // Lista de perfumes que será exibida (filtrada pela pesquisa)
   List<Perfume> _foundPerfumes = [];
   final TextEditingController _searchController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    _foundPerfumes = _allPerfumes; // Inicialmente, mostra todos os perfumes
-    _searchController
-        .addListener(_onSearchChanged); // Ouve mudanças no campo de pesquisa
-  }
+@override
+void initState() {
+  super.initState();
+  // Não precisamos mais do _foundPerfumes = _allPerfumes aqui,
+  // pois _filterPerfumes já fará isso se a pesquisa e filtros estiverem vazios.
+  _searchController.addListener(_onSearchChanged);
+  _filterPerfumes(_searchController.text); // Chama para aplicar os filtros iniciais
+}
 
   @override
   void dispose() {
@@ -101,7 +131,26 @@ class _HomeScreenState extends State<HomeScreen> {
           .toList();
     }
 
-    // Atualiza a UI com os resultados filtrados
+    // Aplica os filtros adicionais
+    results = results.where((perfume) {
+      // Filtro por marca
+      if (_currentFilters.selectedBrands.isNotEmpty &&
+          !_currentFilters.selectedBrands.contains(perfume.brand)) {
+        return false; // Remove se a marca não estiver selecionada
+      }
+      // Filtro por gênero
+      if (_currentFilters.selectedGenders.isNotEmpty &&
+          !_currentFilters.selectedGenders.contains(perfume.gender)) {
+        return false; // Remove se o gênero não estiver selecionado
+      }
+      // Filtro por faixa de preço
+      if (perfume.price < _currentFilters.priceRange.start ||
+          perfume.price > _currentFilters.priceRange.end) {
+        return false; // Remove se o preço estiver fora da faixa
+      }
+      return true; // Mantém o perfume se ele passar por todos os filtros
+    }).toList();
+
     setState(() {
       _foundPerfumes = results;
     });
@@ -117,6 +166,58 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         // O leading (ícone de menu) é automaticamente adicionado quando um Drawer está presente
         actions: [
+          Stack(
+            // Usa Stack para sobrepor o ícone de filtro com um indicador
+            children: [
+              IconButton(
+                icon: const Icon(Icons.filter_list, color: Colors.black87),
+                onPressed: () async {
+                  // Navega para a FilterScreen e espera o resultado
+                  final selectedFilters = await Navigator.push<PerfumeFilters>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          FilterScreen(currentFilters: _currentFilters),
+                    ),
+                  );
+                  // Se o usuário aplicou filtros e não apenas voltou
+                  if (selectedFilters != null) {
+                    setState(() {
+                      _currentFilters =
+                          selectedFilters; // Atualiza os filtros da Home
+                    });
+                    _filterPerfumes(_searchController
+                        .text); // Re-aplica a pesquisa e os novos filtros
+                  }
+                },
+              ),
+              if (_currentFilters
+                  .hasActiveFilters) // Exibe um indicador se há filtros ativos
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red, // Cor para o indicador de filtro ativo
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 12,
+                      minHeight: 12,
+                    ),
+                    child: const Text(
+                      '',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                )
+            ],
+          ),
           // Ícone de Perfil do Usuário
           IconButton(
             icon: const Icon(Icons.person_outline, color: Colors.black87),

@@ -42,58 +42,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   void _confirmOrder() {
     if (_formKey.currentState!.validate()) {
-      // Valida todos os campos do formulário
       if (_selectedPaymentMethod == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Por favor, selecione uma forma de pagamento.')),
+          const SnackBar(content: Text('Por favor, selecione uma forma de pagamento.')),
         );
         return;
       }
 
-      // Se a validação passar e a forma de pagamento for selecionada:
       final cartManager = Provider.of<CartManager>(context, listen: false);
+      final orderManager = Provider.of<OrderManager>(context, listen: false); // <<< Obter OrderManager
       final orderTotal = cartManager.totalPrice;
 
-      // Coleta os dados do pedido
-      final orderDetails = {
-        'totalPrice': orderTotal,
-        'address': {
-          'street': _streetController.text,
-          'number': _numberController.text,
-          'neighborhood': _neighborhoodController.text,
-          'complement': _complementController.text,
-          'city': _cityController.text,
-          'state': _stateController.text,
-          'zipCode': _zipCodeController.text,
-        },
-        'paymentMethod': _selectedPaymentMethod,
-        'items': cartManager.items
-            .map((item) => {
-                  'perfumeName': item.perfume.name,
-                  'quantity': item.quantity,
-                  'pricePerUnit': item.perfume.price,
-                  'totalItemPrice': item.totalPrice,
-                })
-            .toList(),
-        'timestamp': DateTime.now().toIso8601String(),
-      };
-
-      //Pega a instância do OrderManager
-      final orderManager = Provider.of<OrderManager>(context, listen: false);
-
-      //Adiciona o pedido ao OrderManager
+      // Chama o addOrder do OrderManager, passando os CartItems diretamente
       orderManager.addOrder(
-        items: cartManager.items
-            .map((item) => {
-                  // Passa os itens do carrinho como Map
-                  'perfumeName': item.perfume.name,
-                  'quantity': item.quantity,
-                  'pricePerUnit': item.perfume.price,
-                  'totalItemPrice': item.totalPrice,
-                  // Você pode adicionar mais detalhes do perfume aqui se precisar para o OrderManager
-                })
-            .toList(),
+        items: cartManager.items, // <<< Passe os itens do carrinho diretamente!
         addressDetails: {
           'street': _streetController.text,
           'number': _numberController.text,
@@ -103,27 +65,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           'state': _stateController.text,
           'zipCode': _zipCodeController.text,
         },
-        paymentMethod: _selectedPaymentMethod!, // ! garante que não é null
+        paymentMethod: _selectedPaymentMethod!,
         totalAmount: orderTotal,
       );
 
-// Limpa o carrinho
       cartManager.clearCart();
 
-// Exibe uma mensagem de sucesso
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pedido Finalizado com Sucesso!')),
       );
 
-      print('Detalhes do Pedido: $orderDetails'); // Para debug
+      // (Remova o print do orderDetails, pois não estamos mais gerando aquele Map aqui)
+      // print('Detalhes do Pedido: $orderDetails'); // Esta linha pode ser removida ou ajustada
 
-// Opcional: Navegar para uma tela de confirmação de pedido ou para a Home
-      Navigator.popUntil(
-          context,
-          (route) =>
-              route.isFirst); // Volta para a primeira tela (Welcome ou Home)
+      Navigator.popUntil(context, (route) => route.isFirst);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

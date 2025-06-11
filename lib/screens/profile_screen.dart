@@ -1,27 +1,54 @@
-import 'package:flutter/material.dart';
+// lib/screens/profile_screen.dart
 
-class ProfileScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:perfumes_ecomerce/screens/edit_profile_screen.dart'; // Importa a tela de edição
+
+class ProfileScreen extends StatefulWidget { // Mudado para StatefulWidget
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Dados de exemplo para o perfil do usuário
-    const String userName = 'João da Silva';
-    const String userEmail = 'joao.silva@exemplo.com';
-    const String userAddress = 'Rua das Flores, 123 - Cidade, Estado';
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
 
+class _ProfileScreenState extends State<ProfileScreen> {
+  // Dados do usuário (agora mutáveis para que possamos atualizar)
+  UserProfileData _userData = UserProfileData(
+    name: 'João da Silva',
+    email: 'joao.silva@exemplo.com',
+    address: 'Rua das Flores, 123 - Cidade, Estado',
+  );
+
+  // Função para navegar para a tela de edição e aguardar o resultado
+  Future<void> _editProfile() async {
+    final updatedData = await Navigator.push<UserProfileData>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(currentUserData: _userData),
+      ),
+    );
+
+    // Se dados foram retornados (usuário clicou em salvar)
+    if (updatedData != null) {
+      setState(() {
+        _userData = updatedData; // Atualiza o estado da tela de perfil
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meu Perfil', style: TextStyle(color: Colors.black87)),
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87), // Cor da seta de voltar
+        iconTheme: const IconThemeData(color: Colors.black87),
       ),
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center, // Centraliza os elementos
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             // Ícone/Avatar do Usuário
             const CircleAvatar(
@@ -35,9 +62,9 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Nome do Usuário
+            // Nome do Usuário (agora dinâmico)
             Text(
-              userName,
+              _userData.name,
               style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
@@ -46,9 +73,9 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // Email do Usuário
+            // Email do Usuário (agora dinâmico)
             Text(
-              userEmail,
+              _userData.email,
               style: const TextStyle(
                 fontSize: 18,
                 color: Colors.black54,
@@ -66,13 +93,9 @@ class ProfileScreen extends StatelessWidget {
               child: ListTile(
                 leading: const Icon(Icons.email_outlined, color: Colors.black54),
                 title: const Text('Email'),
-                subtitle: Text(userEmail),
-                trailing: const Icon(Icons.edit, color: Colors.black26), // Ícone de edição
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Editar email (em breve!)')),
-                  );
-                },
+                subtitle: Text(_userData.email), // Usa o dado dinâmico
+                trailing: const Icon(Icons.edit, color: Colors.black26),
+                onTap: _editProfile, // Chama o método de edição
               ),
             ),
             Card(
@@ -84,37 +107,31 @@ class ProfileScreen extends StatelessWidget {
               child: ListTile(
                 leading: const Icon(Icons.location_on_outlined, color: Colors.black54),
                 title: const Text('Endereço'),
-                subtitle: Text(userAddress),
+                subtitle: Text(_userData.address), // Usa o dado dinâmico
                 trailing: const Icon(Icons.edit, color: Colors.black26),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Editar endereço (em breve!)')),
-                  );
-                },
+                onTap: _editProfile, // Chama o método de edição
               ),
             ),
             const SizedBox(height: 32),
 
-            // Botões de Ação
-            ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Navegar para Edição de Perfil (em breve!)')),
-                );
-                // TODO: Navegar para a tela de edição de perfil
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black87,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                minimumSize: const Size.fromHeight(50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            // Botão de Ação "Editar Perfil"
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton( // Não é mais ElevatedButton.icon, mas um ElevatedButton
+                onPressed: _editProfile, // Chama o método de edição
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black87,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  minimumSize: const Size.fromHeight(50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-              ),
-              child: const Text(
-                'Editar Perfil',
-                style: TextStyle(fontSize: 18),
+                child: const Text(
+                  'Editar Perfil',
+                  style: TextStyle(fontSize: 18),
+                ),
               ),
             ),
             const SizedBox(height: 16),

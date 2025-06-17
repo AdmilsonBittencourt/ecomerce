@@ -114,9 +114,9 @@ class DatabaseHelper {
   /// Insere dados iniciais de perfumes na tabela de perfumes.
   Future<void> _seedPerfumes(Database db) async {
     final perfumes = [
-      Perfume(id: 'p1', name: 'Acqua di Giò', imageUrl: 'url_image_1', price: 450.0, brand: 'Giorgio Armani', gender: 'Masculino'),
-      Perfume(id: 'p2', name: 'Chanel No. 5', imageUrl: 'url_image_2', price: 850.0, brand: 'Chanel', gender: 'Feminino'),
-      Perfume(id: 'p3', name: 'CK One', imageUrl: 'url_image_3', price: 320.0, brand: 'Calvin Klein', gender: 'Unissex'),
+      Perfume(id: 'p1', name: 'Acqua di Giò', imageUrl: 'https://epocacosmeticos.vteximg.com.br/arquivos/ids/825787/acqua-di-gio-profundo-giorgio-armani-perfume-masculino-edp%20-1-.jpg.jpg?v=638799054797670000', price: 450.0, brand: 'Giorgio Armani', gender: 'Masculino'),
+      Perfume(id: 'p2', name: 'Chanel No. 5', imageUrl: 'https://cdn.awsli.com.br/600x450/364/364776/produto/100101003/c5c7744215.jpg', price: 850.0, brand: 'Chanel', gender: 'Feminino'),
+      Perfume(id: 'p3', name: 'CK One', imageUrl: 'https://cdn.awsli.com.br/600x1000/764/764220/produto/344117583ca665ffb2.jpg', price: 320.0, brand: 'Calvin Klein', gender: 'Unissex'),
     ];
 
     for (final perfume in perfumes) {

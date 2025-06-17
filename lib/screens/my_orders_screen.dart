@@ -10,8 +10,22 @@ import 'package:intl/intl.dart'; // Para formatar a data
 //     sdk: flutter
 //   intl: ^0.19.0 # ou a versão mais recente
 
-class MyOrdersScreen extends StatelessWidget {
+class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
+
+  @override
+  State<MyOrdersScreen> createState() => _MyOrdersScreenState();
+}
+
+class _MyOrdersScreenState extends State<MyOrdersScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Carrega os pedidos quando a tela é aberta
+    Future.microtask(() => 
+      Provider.of<OrderManager>(context, listen: false).loadUserOrders()
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,9 +64,8 @@ class MyOrdersScreen extends StatelessWidget {
             itemCount: orderManager.orders.length,
             itemBuilder: (context, index) {
               final order = orderManager.orders[index];
-              // Formata a data para um formato legível
               final dateFormatter = DateFormat('dd/MM/yyyy HH:mm');
-              final formattedDate = dateFormatter.format(order.orderDate);
+              final formattedDate = dateFormatter.format(order.createdAt);
 
               return Card(
                 margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -63,22 +76,42 @@ class MyOrdersScreen extends StatelessWidget {
                 child: InkWell(
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Detalhes do Pedido ${order.id.substring(0, 8)} (em breve!)')),
+                      SnackBar(content: Text('Detalhes do Pedido #${order.id} (em breve!)')),
                     );
-                    // TODO: Navegar para uma tela de detalhes de pedido, passando o objeto order
+                    // TODO: Navegar para uma tela de detalhes de pedido
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(
-                          'Pedido #${order.id.substring(0, 8).toUpperCase()}', // Mostra os primeiros 8 caracteres do ID
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Pedido #${order.id}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(order.status),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                _getStatusText(order.status),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -96,10 +129,14 @@ class MyOrdersScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Itens: ${order.totalProductsInOrder} produtos',
+                          'Itens: ${order.items.length} produtos',
                           style: const TextStyle(fontSize: 14, color: Colors.black54),
                         ),
-                        // Você pode adicionar mais detalhes aqui, como status do pedido etc.
+                        const SizedBox(height: 8),
+                        Text(
+                          'Forma de Pagamento: ${_getPaymentMethodText(order.paymentMethod)}',
+                          style: const TextStyle(fontSize: 14, color: Colors.black54),
+                        ),
                       ],
                     ),
                   ),
@@ -110,5 +147,50 @@ class MyOrdersScreen extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.orange;
+      case 'processing':
+        return Colors.blue;
+      case 'shipped':
+        return Colors.purple;
+      case 'delivered':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getStatusText(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'Pendente';
+      case 'processing':
+        return 'Processando';
+      case 'shipped':
+        return 'Enviado';
+      case 'delivered':
+        return 'Entregue';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  }
+
+  String _getPaymentMethodText(String method) {
+    switch (method.toLowerCase()) {
+      case 'credit_card':
+        return 'Cartão de Crédito';
+      case 'bank_slip':
+        return 'Boleto Bancário';
+      default:
+        return method;
+    }
   }
 }

@@ -19,75 +19,94 @@ class _HomeScreenState extends State<HomeScreen> {
   // Lista original de todos os perfumes
   final List<Perfume> _allPerfumes = [
     Perfume(
-      name: 'Perfume Elegance',
-      imageUrl: 'https://via.placeholder.com/200/A3B8B8/FFFFFF?text=Perfume1',
-      price: 199.99,
-      brand: 'Luxury Scents', // Adicionado
-      gender: 'Feminino', // Adicionado
+      id: 1,
+      name: 'Chanel N°5 Eau de Parfum',
+      description: 'Um clássico atemporal com notas de aldeído, jasmim e rosa.',
+      imageUrl: 'https://cdn.awsli.com.br/600x450/364/364776/produto/100096084/0e1734d8f6.jpg',
+      price: 299.99,
+      brand: 'Chanel',
+      category: 'Feminino',
     ),
     Perfume(
-      name: 'Essência Noturna',
-      imageUrl: 'https://via.placeholder.com/200/8D9898/FFFFFF?text=Perfume2',
+      id: 2,
+      name: 'Dior Sauvage Eau de Parfum',
+      description: 'Uma fragrância masculina intensa com notas de bergamota e ambroxan.',
+      imageUrl: 'https://cdn.vnda.com.br/950x/delmondostore/2021/08/20/19_8_2_227_DIOR_SAUVAGEEDP_01.jpg?v=1629498814',
       price: 249.90,
-      brand: 'Urban Aura',
-      gender: 'Masculino',
+      brand: 'Dior',
+      category: 'Masculino',
     ),
     Perfume(
-      name: 'Aroma da Primavera',
-      imageUrl: 'https://via.placeholder.com/200/C6D8D8/000000?text=Perfume3',
+      id: 3,
+      name: 'Jo Malone London Wood Sage & Sea Salt',
+      description: 'Uma fragrância unissex com notas de sal marinho e sálvia.',
+      imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhzWzkvuneDC1xdftofnHjN8MjtEPQ5DTF7g&s',
       price: 150.00,
-      brand: 'Nature Inspired',
-      gender: 'Unissex',
+      brand: 'Jo Malone',
+      category: 'Unissex',
     ),
     Perfume(
-      name: 'Toque Amadeirado',
-      imageUrl: 'https://via.placeholder.com/200/667373/FFFFFF?text=Perfume4',
+      id: 4,
+      name: 'Tom Ford Oud Wood',
+      description: 'Uma fragrância oriental com notas de oud, sândalo e baunilha.',
+      imageUrl: 'https://www.mundodosdecants.com.br/wp-content/uploads/2024/11/Tom-Ford-Oud-Wood-Parfum.jpg',
       price: 280.50,
-      brand: 'Luxury Scents',
-      gender: 'Masculino',
+      brand: 'Tom Ford',
+      category: 'Masculino',
     ),
     Perfume(
-      name: 'Doce Tentação',
-      imageUrl: 'https://via.placeholder.com/200/A7B8B8/FFFFFF?text=Perfume5',
+      id: 5,
+      name: 'Yves Saint Laurent Black Opium',
+      description: 'Uma fragrância feminina viciante com notas de café e baunilha.',
+      imageUrl: 'https://www.giraofertas.com.br/wp-content/uploads/2021/05/Black-Opium-Yves-Saint-Laurent-Eau-de-Parfum-05.jpg',
       price: 175.25,
-      brand: 'Urban Aura',
-      gender: 'Feminino',
+      brand: 'Yves Saint Laurent',
+      category: 'Feminino',
     ),
     Perfume(
-      name: 'Mistério Oriental',
-      imageUrl: 'https://via.placeholder.com/200/9F8B9B/FFFFFF?text=Perfume6',
+      id: 6,
+      name: 'Maison Margiela Replica Jazz Club',
+      description: 'Uma fragrância unissex inspirada em bares de jazz dos anos 50.',
+      imageUrl: 'https://cdn.awsli.com.br/2500x2500/364/364776/produto/109874128/5d4ece98bc.jpg',
       price: 320.00,
-      brand: 'Exotic Delights',
-      gender: 'Unissex',
+      brand: 'Maison Margiela',
+      category: 'Unissex',
     ),
     Perfume(
-      name: 'Frescor do Oceano',
-      imageUrl: 'https://via.placeholder.com/200/B8D8D8/000000?text=Perfume7',
+      id: 7,
+      name: 'Acqua di Parma Colonia',
+      description: 'Uma fragrância cítrica clássica com notas de bergamota e lavanda.',
+      imageUrl: 'https://www.giraofertas.com.br/wp-content/uploads/2019/07/Acqua-di-Parma-Colonia-Essenza-02.jpg',
       price: 210.00,
-      brand: 'Nature Inspired',
-      gender: 'Masculino',
+      brand: 'Acqua di Parma',
+      category: 'Masculino',
     ),
     Perfume(
-      name: 'Sonho Dourado',
-      imageUrl: 'https://via.placeholder.com/200/FFD700/000000?text=Perfume8',
+      id: 8,
+      name: 'Gucci Bloom Eau de Parfum',
+      description: 'Uma fragrância floral com notas de tuberosa e jasmim.',
+      imageUrl: 'https://www.sephora.com.br/dw/image/v2/BFJC_PRD/on/demandware.static/-/Sites-masterCatalog_Sephora/pt_BR/dwae39dfff/images/hi-res-BR/prd27376.jpg?sw=556&sh=680&sm=fit',
       price: 270.00,
-      brand: 'Luxury Scents',
-      gender: 'Feminino',
+      brand: 'Gucci',
+      category: 'Feminino',
     ),
     Perfume(
-      name: 'Poder Urbano',
-      imageUrl: 'https://via.placeholder.com/200/404040/FFFFFF?text=Perfume9',
+      id: 9,
+      name: 'Bleu de Chanel Eau de Parfum',
+      description: 'Uma fragrância masculina sofisticada com notas de cítricos e madeiras.',
+      imageUrl: 'https://acdn-us.mitiendanube.com/stores/003/728/105/products/perfume_fotos_bleu-de-chanel-ff353eadca63bffaa217152001809211-1024-1024.jpg',
       price: 295.00,
-      brand: 'Urban Aura',
-      gender: 'Masculino',
+      brand: 'Chanel',
+      category: 'Masculino',
     ),
     Perfume(
-      // Adicione mais um para ter mais opções
-      name: 'Flor do Campo',
-      imageUrl: 'https://via.placeholder.com/200/E6E6FA/000000?text=Perfume10',
+      id: 10,
+      name: 'Byredo Gypsy Water',
+      description: 'Uma fragrância unissex com notas de bergamota, pimenta e baunilha.',
+      imageUrl: 'https://i0.wp.com/www.sprayparfums.com/wp-content/uploads/2024/06/0by1p100gypsywa_2.jpg?fit=430%2C568&ssl=1',
       price: 180.00,
-      brand: 'Nature Inspired',
-      gender: 'Feminino',
+      brand: 'Byredo',
+      category: 'Unissex',
     ),
   ];
 
@@ -136,19 +155,19 @@ void initState() {
       // Filtro por marca
       if (_currentFilters.selectedBrands.isNotEmpty &&
           !_currentFilters.selectedBrands.contains(perfume.brand)) {
-        return false; // Remove se a marca não estiver selecionada
+        return false;
       }
-      // Filtro por gênero
+      // Filtro por categoria (anteriormente gender)
       if (_currentFilters.selectedGenders.isNotEmpty &&
-          !_currentFilters.selectedGenders.contains(perfume.gender)) {
-        return false; // Remove se o gênero não estiver selecionado
+          !_currentFilters.selectedGenders.contains(perfume.category)) {
+        return false;
       }
       // Filtro por faixa de preço
       if (perfume.price < _currentFilters.priceRange.start ||
           perfume.price > _currentFilters.priceRange.end) {
-        return false; // Remove se o preço estiver fora da faixa
+        return false;
       }
-      return true; // Mantém o perfume se ele passar por todos os filtros
+      return true;
     }).toList();
 
     setState(() {

@@ -102,7 +102,7 @@ class CartScreen extends StatelessWidget {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8.0),
                               child: Image.network(
-                                cartItem.perfume.imageUrl,
+                                cartItem.productImageUrl,
                                 width: 80,
                                 height: 80,
                                 fit: BoxFit.cover,
@@ -121,7 +121,7 @@ class CartScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
                                   Text(
-                                    cartItem.perfume.name,
+                                    cartItem.productName,
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -132,7 +132,7 @@ class CartScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'R\$ ${cartItem.perfume.price.toStringAsFixed(2)} / un.',
+                                    'R\$ ${cartItem.productPrice.toStringAsFixed(2)} / un.',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.black54,
@@ -146,7 +146,7 @@ class CartScreen extends StatelessWidget {
                                       IconButton(
                                         icon: const Icon(Icons.remove, size: 20),
                                         onPressed: () {
-                                          cartManager.decrementItemQuantity(cartItem.perfume);
+                                          cartManager.decrementItemQuantity(cartItem.productId);
                                         },
                                       ),
                                       Text(
@@ -156,7 +156,7 @@ class CartScreen extends StatelessWidget {
                                       IconButton(
                                         icon: const Icon(Icons.add, size: 20),
                                         onPressed: () {
-                                          cartManager.incrementItemQuantity(cartItem.perfume);
+                                          cartManager.incrementItemQuantity(cartItem.productId);
                                         },
                                       ),
                                     ],
@@ -179,7 +179,7 @@ class CartScreen extends StatelessWidget {
                                 IconButton(
                                   icon: const Icon(Icons.delete, color: Colors.red),
                                   onPressed: () {
-                                    cartManager.removeItem(cartItem.perfume);
+                                    cartManager.removeItem(cartItem.productId);
                                   },
                                 ),
                               ],

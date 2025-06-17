@@ -109,17 +109,16 @@ class DatabaseHelper {
     return await db.insert('users', user);
   }
 
-  Future<Map<String, dynamic>?> getUser(int id) async {
-    Database db = await database;
-    List<Map<String, dynamic>> maps = await db.query(
+  Future<User?> getUser(int userId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
       'users',
       where: 'id = ?',
-      whereArgs: [id],
+      whereArgs: [userId],
     );
-    if (maps.isNotEmpty) {
-      return maps.first;
-    }
-    return null;
+
+    if (maps.isEmpty) return null;
+    return User.fromMap(maps.first);
   }
 
   Future<User?> getUserByEmail(String email) async {
@@ -137,6 +136,16 @@ class DatabaseHelper {
     return User.fromMap(maps.first);
   }
 
+  Future<void> updateUser(Map<String, dynamic> user) async {
+    final db = await database;
+    await db.update(
+      'users',
+      user,
+      where: 'id = ?',
+      whereArgs: [user['id']],
+    );
+  }
+
   // Métodos para Endereços
   Future<int> insertAddress(Map<String, dynamic> address) async {
     Database db = await database;
@@ -149,6 +158,28 @@ class DatabaseHelper {
       'addresses',
       where: 'user_id = ?',
       whereArgs: [userId],
+    );
+  }
+
+  Future<Address?> getUserAddress(int userId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'addresses',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+
+    if (maps.isEmpty) return null;
+    return Address.fromMap(maps.first);
+  }
+
+  Future<void> updateAddress(Map<String, dynamic> address) async {
+    final db = await database;
+    await db.update(
+      'addresses',
+      address,
+      where: 'id = ?',
+      whereArgs: [address['id']],
     );
   }
 

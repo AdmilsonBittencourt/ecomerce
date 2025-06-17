@@ -36,4 +36,22 @@ class User {
       password: map['password'],
     );
   }
+
+  User copyWith({
+    int? id,
+    String? name,
+    String? email,
+    String? phone,
+    DateTime? createdAt,
+    String? password,
+  }) {
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      createdAt: createdAt ?? this.createdAt,
+      password: password ?? this.password,
+    );
+  }
 } 

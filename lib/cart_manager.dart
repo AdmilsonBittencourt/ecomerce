@@ -1,74 +1,75 @@
 import 'package:flutter/material.dart';
-import 'package:perfumes_ecomerce/db/database_helper.dart';
-import 'package:perfumes_ecomerce/models/cart_item.dart';
 import 'package:perfumes_ecomerce/models/perfume.dart';
+import 'package:perfumes_ecomerce/models/cart_item.dart';
 
+// Usa ChangeNotifier para notificar os widgets que dependem dele
 class CartManager extends ChangeNotifier {
-  List<CartItem> _items = []; // A lista agora é um cache dos dados do banco.
-  bool isLoading = true;
-  // Getters continuam úteis para a UI
-  List<CartItem> get items => List.unmodifiable(_items);
-  
+  final List<CartItem> _items = []; // Lista interna de itens no carrinho
+
+  List<CartItem> get items => List.unmodifiable(_items); // Getter para acessar os itens (imutável)
+
   double get totalPrice {
-    return _items.fold(0.0, (sum, item) => sum + item.totalPrice);
-  }
-
-  int get itemCount => _items.length;
-
-  // Construtor: Ao iniciar o manager, busca os itens do carrinho
-  CartManager() {
-    fetchCartItems();
-  }
-
-  /// NOVO: Busca os itens do banco e atualiza o estado interno.
-  Future<void> fetchCartItems() async {
-    isLoading = true;
-    _items = await DatabaseHelper.instance.getCartItems();
-    isLoading = false;
-    notifyListeners(); // Notifica a UI que a lista de itens foi atualizada
-  }
-
-  /// REFATORADO: Adiciona o item através do DatabaseHelper
-  Future<void> addItem(Perfume perfume, int quantity) async {
-    // Cria um CartItem baseado nos modelos que definimos
-    final newItem = CartItem(
-      perfumeId: perfume.id,
-      name: perfume.name,
-      price: perfume.price,
-      imageUrl: perfume.imageUrl,
-      quantity: quantity,
-    );
-    
-    await DatabaseHelper.instance.addItem(newItem);
-    await fetchCartItems(); // Após modificar o banco, busca a lista atualizada
-  }
-
-  /// REFATORADO: Remove o item pelo seu ID no banco
-  Future<void> removeItem(int cartItemId) async {
-    await DatabaseHelper.instance.removeItem(cartItemId);
-    await fetchCartItems();
-  }
-  
-  /// REFATORADO: Aumenta a quantidade
-  Future<void> incrementItemQuantity(CartItem item) async {
-    await DatabaseHelper.instance.updateItemQuantity(item.id!, item.quantity + 1);
-    await fetchCartItems();
-  }
-
-  /// REFATORADO: Diminui a quantidade ou remove
-  Future<void> decrementItemQuantity(CartItem item) async {
-    if (item.quantity > 1) {
-      await DatabaseHelper.instance.updateItemQuantity(item.id!, item.quantity - 1);
-    } else {
-      // Se a quantidade é 1, remover o item
-      await DatabaseHelper.instance.removeItem(item.id!);
+    double total = 0.0;
+    for (var item in _items) {
+      total += item.totalPrice;
     }
-    await fetchCartItems();
+    return total;
   }
 
-  /// REFATORADO: Limpa o carrinho no banco de dados
-  Future<void> clearCart() async {
-    await DatabaseHelper.instance.clearCart();
-    await fetchCartItems();
+  int get itemCount => _items.length; // Número de itens distintos no carrinho
+
+  // Adiciona um perfume ao carrinho
+  void addItem(Perfume perfume, int quantity) {
+    bool found = false;
+    for (var item in _items) {
+      if (item.perfume.name == perfume.name) { // Se o perfume já está no carrinho
+        item.quantity += quantity; // Aumenta a quantidade
+        found = true;
+        break;
+      }
+    }
+    if (!found) { // Se o perfume não está no carrinho, adiciona um novo item
+      _items.add(CartItem(perfume: perfume, quantity: quantity));
+    }
+    notifyListeners(); // Notifica os ouvintes sobre a mudança
+  }
+
+  // Remove um item completamente do carrinho
+  void removeItem(Perfume perfume) {
+    _items.removeWhere((item) => item.perfume.name == perfume.name);
+    notifyListeners();
+  }
+
+  // Aumenta a quantidade de um item
+  void incrementItemQuantity(Perfume perfume) {
+    for (var item in _items) {
+      if (item.perfume.name == perfume.name) {
+        item.quantity++;
+        break;
+      }
+    }
+    notifyListeners();
+  }
+
+  // Diminui a quantidade de um item
+  void decrementItemQuantity(Perfume perfume) {
+    for (var item in _items) {
+      if (item.perfume.name == perfume.name) {
+        if (item.quantity > 1) {
+          item.quantity--;
+        } else {
+          // Se a quantidade chegar a 0, remove o item
+          _items.remove(item);
+        }
+        break;
+      }
+    }
+    notifyListeners();
+  }
+
+  // Limpa todos os itens do carrinho
+  void clearCart() {
+    _items.clear();
+    notifyListeners();
   }
 }

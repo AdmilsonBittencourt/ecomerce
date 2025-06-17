@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:perfumes_ecomerce/cart_manager.dart';
-import 'package:perfumes_ecomerce/screens/checkout_screen.dart';
+import 'package:perfumes_ecomerce/cart_manager.dart'; // Importa o nosso gerenciador de carrinho
+import 'package:perfumes_ecomerce/models/cart_item.dart'; // Importa o modelo CartItem
+import 'package:perfumes_ecomerce/screens/checkout_screen.dart'; // Importa a tela de checkout
+
+// Para consumir o ChangeNotifier, vamos usar o pacote Provider.
+// Se ainda não adicionou, adicione ao seu pubspec.yaml:
+// dependencies:
+//   flutter:
+//     sdk: flutter
+//   provider: ^6.0.5 # ou a versão mais recente
 import 'package:provider/provider.dart';
 
 class CartScreen extends StatelessWidget {
@@ -8,6 +16,8 @@ class CartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Usamos Consumer para reconstruir apenas esta parte da árvore de widgets
+    // quando o CartManager notificar mudanças.
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meu Carrinho', style: TextStyle(color: Colors.black87)),
@@ -15,53 +25,42 @@ class CartScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
         actions: [
-          // O Consumer aqui garante que o botão só aparece se o carrinho não estiver vazio
-          Consumer<CartManager>(
-            builder: (context, cartManager, child) {
-              if (cartManager.items.isEmpty || cartManager.isLoading) {
-                return const SizedBox.shrink(); // Não mostra nada se estiver vazio ou carregando
-              }
-              return child!;
-            },
-            child: IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              onPressed: () {
-                // A lógica do showDialog permanece a mesma
-                showDialog(
-                  context: context,
-                  builder: (dialogContext) => AlertDialog(
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.red),
+            onPressed: () {
+              // Confirmação antes de limpar o carrinho
+              showDialog(
+                context: context,
+                builder: (BuildContext dialogContext) {
+                  return AlertDialog(
                     title: const Text('Limpar Carrinho?'),
-                    content: const Text('Tem certeza que deseja remover todos os itens?'),
+                    content: const Text('Tem certeza que deseja remover todos os itens do carrinho?'),
                     actions: <Widget>[
                       TextButton(
-                        child: const Text('Cancelar'),
-                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        child: const Text('Cancelar', style: TextStyle(color: Colors.black54)),
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop(); // Fecha o diálogo
+                        },
                       ),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                        child: const Text('Limpar'),
+                        child: const Text('Limpar', style: TextStyle(color: Colors.white)),
                         onPressed: () {
-                          // A chamada já é a correta, pois o método tem o mesmo nome
                           Provider.of<CartManager>(context, listen: false).clearCart();
-                          Navigator.of(dialogContext).pop();
+                          Navigator.of(dialogContext).pop(); // Fecha o diálogo
                         },
                       ),
                     ],
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              );
+            },
           ),
         ],
       ),
       backgroundColor: Colors.white,
       body: Consumer<CartManager>(
         builder: (context, cartManager, child) {
-          // Usando o novo flag `isLoading`
-          if (cartManager.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
           if (cartManager.items.isEmpty) {
             return const Center(
               child: Column(
@@ -69,12 +68,19 @@ class CartScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.shopping_cart_outlined, size: 100, color: Colors.grey),
                   SizedBox(height: 16),
-                  Text('Seu carrinho está vazio!', style: TextStyle(fontSize: 20, color: Colors.black54)),
+                  Text(
+                    'Seu carrinho está vazio!',
+                    style: TextStyle(fontSize: 20, color: Colors.black54),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Adicione alguns perfumes para começar.',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
                 ],
               ),
             );
           }
-          
           return Column(
             children: <Widget>[
               Expanded(
@@ -84,57 +90,99 @@ class CartScreen extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final cartItem = cartManager.items[index];
                     return Card(
-                      // ... O design do seu Card está perfeito, vamos manter ...
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Row(
                           children: <Widget>[
-                            // ... Imagem ...
-                            // ... Nome e Preço ...
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8.0),
+                              child: Image.network(
+                                cartItem.perfume.imageUrl,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(
+                                    Icons.broken_image,
+                                    size: 80,
+                                    color: Colors.grey,
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                   Text(cartItem.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                                   const SizedBox(height: 4),
-                                   Text('R\$ ${cartItem.price.toStringAsFixed(2)} / un.'),
-                                   const SizedBox(height: 8),
-                                  // --- MUDANÇA AQUI ---
+                                children: <Widget>[
+                                  Text(
+                                    cartItem.perfume.name,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'R\$ ${cartItem.perfume.price.toStringAsFixed(2)} / un.',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  // Contador de Quantidade no Carrinho
                                   Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
                                         icon: const Icon(Icons.remove, size: 20),
                                         onPressed: () {
-                                          // ATUALIZADO: Passa o objeto cartItem inteiro
-                                          cartManager.decrementItemQuantity(cartItem);
+                                          cartManager.decrementItemQuantity(cartItem.perfume);
                                         },
                                       ),
-                                      Text('${cartItem.quantity}', style: const TextStyle(fontSize: 16)),
+                                      Text(
+                                        '${cartItem.quantity}',
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      ),
                                       IconButton(
                                         icon: const Icon(Icons.add, size: 20),
                                         onPressed: () {
-                                          // ATUALIZADO: Passa o objeto cartItem inteiro
-                                          cartManager.incrementItemQuantity(cartItem);
+                                          cartManager.incrementItemQuantity(cartItem.perfume);
                                         },
                                       ),
                                     ],
-                                  )
+                                  ),
                                 ],
                               ),
                             ),
+                            // Preço Total do Item
                             Column(
-                               children: [
-                                  Text('R\$ ${cartItem.totalPrice.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 8),
-                                  // --- MUDANÇA AQUI ---
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () {
-                                      // ATUALIZADO: Passa o ID único do item no carrinho
-                                      cartManager.removeItem(cartItem.id!);
-                                    },
+                              children: [
+                                Text(
+                                  'R\$ ${cartItem.totalPrice.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
                                   ),
-                               ],
+                                ),
+                                const SizedBox(height: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    cartManager.removeItem(cartItem.perfume);
+                                  },
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -143,33 +191,60 @@ class CartScreen extends StatelessWidget {
                   },
                 ),
               ),
-              // --- O rodapé com o total e o botão de checkout permanecem iguais ---
+              // Resumo do Carrinho e Botão de Finalizar Compra
               Container(
                 padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(top: BorderSide(color: Colors.grey[200]!)),
+                ),
                 child: Column(
-                   children: [
-                      Row(
-                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                         children: [
-                           const Text('Total do Carrinho:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                           Text('R\$ ${cartManager.totalPrice.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                         ],
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total do Carrinho:',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                        ),
+                        Text(
+                          'R\$ ${cartManager.totalPrice.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (cartManager.itemCount > 0) {
+                            // Navega para a tela de Checkout
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const CheckoutScreen()),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Seu carrinho está vazio!')),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black87,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          'Finalizar Compra',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                         width: double.infinity,
-                         child: ElevatedButton(
-                           onPressed: () {
-                             Navigator.push(context, MaterialPageRoute(builder: (context) => const CheckoutScreen()));
-                           },
-                           style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black87,
-                              padding: const EdgeInsets.symmetric(vertical: 18),
-                           ),
-                           child: const Text('Finalizar Compra', style: TextStyle(color: Colors.white, fontSize: 18)),
-                         ),
-                      ),
-                   ],
+                    ),
+                  ],
                 ),
               ),
             ],

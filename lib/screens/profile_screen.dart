@@ -5,6 +5,8 @@ import 'package:perfumes_ecomerce/screens/edit_profile_screen.dart';
 import 'package:perfumes_ecomerce/database/database_helper.dart';
 import 'package:perfumes_ecomerce/models/user.dart';
 import 'package:perfumes_ecomerce/models/address.dart';
+import 'package:perfumes_ecomerce/auth/auth_manager.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -33,11 +35,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _errorMessage = null;
       });
 
-      // TODO: Implementar lógica para obter o ID do usuário logado
-      // Por enquanto, vamos usar um ID fixo para teste
-      const userId = 1;
+      final authManager = Provider.of<AuthManager>(context, listen: false);
+      final currentUser = authManager.currentUser;
 
-      final user = await _databaseHelper.getUser(userId);
+      if (currentUser == null) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Usuário não está logado.';
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+
+      final user = await _databaseHelper.getUser(currentUser.id!);
       if (user == null) {
         if (mounted) {
           setState(() {
@@ -48,7 +59,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return;
       }
 
-      final address = await _databaseHelper.getUserAddress(userId);
+      final address = await _databaseHelper.getUserAddress(currentUser.id!);
 
       if (mounted) {
         setState(() {
@@ -92,6 +103,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<void> _logout() async {
+    final authManager = Provider.of<AuthManager>(context, listen: false);
+    await authManager.logout();
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/login');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,6 +119,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _logout,
+          ),
+        ],
       ),
       backgroundColor: Colors.white,
       body: _isLoading

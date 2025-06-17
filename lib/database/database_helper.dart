@@ -29,7 +29,7 @@ class DatabaseHelper {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    // Tabela de Usuários
+    
     await db.execute('''
       CREATE TABLE users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,7 +41,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // Tabela de Endereços
+    
     await db.execute('''
       CREATE TABLE addresses(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,7 +59,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // Tabela de Pedidos
+    
     await db.execute('''
       CREATE TABLE orders(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,7 +74,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // Tabela de Itens do Pedido
+    
     await db.execute('''
       CREATE TABLE order_items(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,7 +87,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // Tabela do Carrinho
+    
     await db.execute('''
       CREATE TABLE cart_items(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -103,7 +103,7 @@ class DatabaseHelper {
     ''');
   }
 
-  // Métodos para Usuários
+  
   Future<int> insertUser(Map<String, dynamic> user) async {
     Database db = await database;
     return await db.insert('users', user);
@@ -146,7 +146,7 @@ class DatabaseHelper {
     );
   }
 
-  // Métodos para Endereços
+  
   Future<int> insertAddress(Map<String, dynamic> address) async {
     Database db = await database;
     return await db.insert('addresses', address);
@@ -183,7 +183,7 @@ class DatabaseHelper {
     );
   }
 
-  // Métodos para Pedidos
+  
   Future<int> insertOrder(Map<String, dynamic> order) async {
     Database db = await database;
     return await db.insert('orders', order);
@@ -223,7 +223,7 @@ class DatabaseHelper {
     );
   }
 
-  // Métodos para Carrinho
+  
   Future<int> insertCartItem(Map<String, dynamic> cartItem) async {
     Database db = await database;
     return await db.insert('cart_items', cartItem);

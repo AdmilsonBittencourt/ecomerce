@@ -3,13 +3,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:perfumes_ecomerce/database/database_helper.dart';
 import 'package:perfumes_ecomerce/models/order.dart';
-import 'package:perfumes_ecomerce/models/cart_item.dart'; // <<< ESSA LINHA PRECISA ESTAR AQUI!
+import 'package:perfumes_ecomerce/models/cart_item.dart'; 
 import 'package:uuid/uuid.dart';
 
 class OrderManager extends ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   List<Order> _orders = [];
-  int _currentUserId = 1; // TODO: Get this from user authentication
+  int _currentUserId;
+
+  OrderManager(this._currentUserId);
 
   List<Order> get orders => _orders;
 
@@ -28,13 +30,13 @@ class OrderManager extends ChangeNotifier {
     required String paymentMethod,
     required double totalAmount,
   }) async {
-    // 1. Salva o endereço
+    
     final addressId = await _dbHelper.insertAddress({
       ...addressDetails,
       'user_id': _currentUserId,
     });
 
-    // 2. Cria o pedido
+    
     final orderId = await _dbHelper.insertOrder({
       'user_id': _currentUserId,
       'address_id': addressId,
@@ -43,7 +45,7 @@ class OrderManager extends ChangeNotifier {
       'status': 'pending',
     });
 
-    // 3. Salva os itens do pedido
+    
     for (var item in items) {
       await _dbHelper.insertOrderItem({
         'order_id': orderId,
@@ -53,12 +55,17 @@ class OrderManager extends ChangeNotifier {
       });
     }
 
-    // 4. Recarrega os pedidos
+    
     await loadUserOrders();
   }
 
   Future<void> updateOrderStatus(int orderId, String newStatus) async {
     await _dbHelper.updateOrderStatus(orderId, newStatus);
     await loadUserOrders();
+  }
+
+  void updateUserId(int userId) {
+    _currentUserId = userId;
+    loadUserOrders();
   }
 }

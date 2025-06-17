@@ -46,7 +46,7 @@ class Order {
     );
   }
 
-  // Um getter opcional para o número total de produtos (frascos) no pedido
+  
   int get totalProductsInOrder {
     int count = 0;
     for (var item in items) {

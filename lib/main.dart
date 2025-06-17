@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:perfumes_ecomerce/order_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:perfumes_ecomerce/auth/auth_manager.dart';
 import 'package:perfumes_ecomerce/screens/login_screen.dart';
@@ -18,6 +19,16 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthManager()),
         ChangeNotifierProvider(create: (_) => CartManager()),
+        ChangeNotifierProxyProvider<AuthManager, OrderManager>(
+          create: (context) {
+            final authManager = Provider.of<AuthManager>(context, listen: false);
+            return OrderManager(authManager.currentUser?.id ?? 0);
+          },
+          update: (context, authManager, previousOrderManager) {
+            previousOrderManager?.updateUserId(authManager.currentUser?.id ?? 0);
+            return previousOrderManager ?? OrderManager(authManager.currentUser?.id ?? 0);
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'Perfumes E-commerce',

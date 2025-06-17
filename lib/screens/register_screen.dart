@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:perfumes_ecomerce/screens/home_screen.dart';
 import 'package:perfumes_ecomerce/screens/login_screen.dart';
-import 'package:perfumes_ecomerce/screens/welcome_screen.dart'; // Importa a tela principal (placeholder)
+import 'package:perfumes_ecomerce/screens/welcome_screen.dart'; 
 import 'package:perfumes_ecomerce/database/database_helper.dart';
 import 'package:perfumes_ecomerce/models/user.dart';
 
@@ -36,7 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
-    // Validação básica
+    
     if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       setState(() {
         _errorMessage = 'Por favor, preencha todos os campos.';
@@ -64,7 +64,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      // Verifica se o email já está em uso
+      
       final existingUser = await _databaseHelper.getUserByEmail(email);
       if (existingUser != null) {
         setState(() {
@@ -74,18 +74,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-      // Cria o novo usuário
+      
       final newUser = User(
         name: name,
         email: email,
         password: password,
       );
 
-      // Salva o usuário no banco de dados
+      
       await _databaseHelper.insertUser(newUser.toMap());
 
       if (mounted) {
-        // Mostra mensagem de sucesso
+        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Cadastro realizado com sucesso!'),
@@ -94,7 +94,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         );
 
-        // Navega para a tela de login
+        
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -129,7 +129,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              // Título
+              
               const Text(
                 'Crie sua conta',
                 style: TextStyle(
@@ -163,7 +163,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
 
-              // Campo de Nome
+              
               TextField(
                 controller: _nameController,
                 enabled: !_isLoading,
@@ -183,7 +183,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Campo de Email
+              
               TextField(
                 controller: _emailController,
                 enabled: !_isLoading,
@@ -204,7 +204,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Campo de Senha
+              
               TextField(
                 controller: _passwordController,
                 enabled: !_isLoading,

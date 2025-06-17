@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 
-// Classe para representar os filtros selecionados
 class PerfumeFilters {
   final List<String> selectedBrands;
   final List<String> selectedGenders;
-  final RangeValues priceRange; // min e max de preço
+  final RangeValues priceRange;
 
   PerfumeFilters({
     this.selectedBrands = const [],
     this.selectedGenders = const [],
-    this.priceRange = const RangeValues(0, 500), // Valores padrão
+    this.priceRange = const RangeValues(0, 500),
   });
 
-  // Copia os filtros, permitindo mudar apenas alguns
   PerfumeFilters copyWith({
     List<String>? selectedBrands,
     List<String>? selectedGenders,
@@ -25,17 +23,16 @@ class PerfumeFilters {
     );
   }
 
-  // Verifica se há algum filtro aplicado
   bool get hasActiveFilters {
     return selectedBrands.isNotEmpty ||
            selectedGenders.isNotEmpty ||
-           priceRange.start > 0 || // Se o mínimo não for 0
-           priceRange.end < 500;   // Se o máximo não for o padrão
+           priceRange.start > 0 ||
+           priceRange.end < 500;
   }
 }
 
 class FilterScreen extends StatefulWidget {
-  final PerfumeFilters currentFilters; // Recebe os filtros atuais da Home
+  final PerfumeFilters currentFilters;
 
   const FilterScreen({super.key, required this.currentFilters});
 
@@ -44,27 +41,23 @@ class FilterScreen extends StatefulWidget {
 }
 
 class _FilterScreenState extends State<FilterScreen> {
-  // Estados locais para os filtros
   late List<String> _tempSelectedBrands;
   late List<String> _tempSelectedGenders;
   late RangeValues _tempPriceRange;
 
-  // Opções disponíveis de filtros
   final List<String> _availableBrands = ['Luxury Scents', 'Urban Aura', 'Nature Inspired', 'Exotic Delights'];
   final List<String> _availableGenders = ['Masculino', 'Feminino', 'Unissex'];
   final double _minPrice = 0.0;
-  final double _maxPrice = 500.0; // Ajuste conforme o range de preços dos seus produtos
+  final double _maxPrice = 500.0;
 
   @override
   void initState() {
     super.initState();
-    // Inicializa os estados temporários com os filtros atuais
     _tempSelectedBrands = List.from(widget.currentFilters.selectedBrands);
     _tempSelectedGenders = List.from(widget.currentFilters.selectedGenders);
     _tempPriceRange = widget.currentFilters.priceRange;
   }
 
-  // Método para "resetar" os filtros
   void _resetFilters() {
     setState(() {
       _tempSelectedBrands.clear();
@@ -94,7 +87,6 @@ class _FilterScreenState extends State<FilterScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // Filtro por Gênero
             const Text(
               'Gênero',
               style: TextStyle(
@@ -103,8 +95,8 @@ class _FilterScreenState extends State<FilterScreen> {
                 color: Colors.black87,
               ),
             ),
-            Wrap( // Permite que os chips quebrem a linha automaticamente
-              spacing: 8.0, // Espaçamento entre os chips
+            Wrap( 
+              spacing: 8.0, 
               children: _availableGenders.map((gender) {
                 return FilterChip(
                   label: Text(gender),
@@ -118,14 +110,13 @@ class _FilterScreenState extends State<FilterScreen> {
                       }
                     });
                   },
-                  selectedColor: Colors.black12, // Cor de fundo quando selecionado
-                  checkmarkColor: Colors.black87, // Cor do ícone de check
+                  selectedColor: Colors.black12, 
+                  checkmarkColor: Colors.black87, 
                 );
               }).toList(),
             ),
             const SizedBox(height: 24),
 
-            // Filtro por Marca
             const Text(
               'Marca',
               style: TextStyle(
@@ -156,7 +147,6 @@ class _FilterScreenState extends State<FilterScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Filtro por Faixa de Preço
             const Text(
               'Faixa de Preço',
               style: TextStyle(
@@ -169,7 +159,7 @@ class _FilterScreenState extends State<FilterScreen> {
               values: _tempPriceRange,
               min: _minPrice,
               max: _maxPrice,
-              divisions: 100, // Número de divisões entre min e max
+              divisions: 100, 
               labels: RangeLabels(
                 'R\$ ${_tempPriceRange.start.toStringAsFixed(2)}',
                 'R\$ ${_tempPriceRange.end.toStringAsFixed(2)}',
@@ -179,8 +169,8 @@ class _FilterScreenState extends State<FilterScreen> {
                   _tempPriceRange = newValues;
                 });
               },
-              activeColor: Colors.black87, // Cor da parte ativa do slider
-              inactiveColor: Colors.grey[300], // Cor da parte inativa
+              activeColor: Colors.black87, 
+              inactiveColor: Colors.grey[300], 
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -194,12 +184,11 @@ class _FilterScreenState extends State<FilterScreen> {
             ),
             const SizedBox(height: 48),
 
-            // Botão Aplicar Filtros
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Retorna os filtros selecionados para a tela anterior (HomeScreen)
+                        
                   Navigator.pop(
                     context,
                     PerfumeFilters(

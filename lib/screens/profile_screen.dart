@@ -1,4 +1,3 @@
-// lib/screens/profile_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:perfumes_ecomerce/screens/edit_profile_screen.dart';
@@ -92,12 +91,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (updatedUser != null) {
-      await _loadUserData(); // Recarrega os dados após a edição
+      await _loadUserData(); 
     }
   }
 
   Future<void> _changePassword() async {
-    // TODO: Implementar tela de alteração de senha
+    
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Funcionalidade em desenvolvimento')),
     );

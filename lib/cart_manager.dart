@@ -2,11 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:perfumes_ecomerce/database/database_helper.dart';
 import 'package:perfumes_ecomerce/models/cart_item.dart';
 
-// Usa ChangeNotifier para notificar os widgets que dependem dele
 class CartManager extends ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   List<CartItem> _items = [];
-  int _currentUserId = 1; // TODO: Get this from user authentication
+  int _currentUserId = 1; 
 
   List<CartItem> get items => _items;
   int get itemCount => _items.length;

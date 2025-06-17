@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:perfumes_ecomerce/cart_manager.dart'; // Importa o nosso gerenciador de carrinho
-import 'package:perfumes_ecomerce/models/cart_item.dart'; // Importa o modelo CartItem
-import 'package:perfumes_ecomerce/screens/checkout_screen.dart'; // Importa a tela de checkout
+import 'package:perfumes_ecomerce/cart_manager.dart';
+import 'package:perfumes_ecomerce/models/cart_item.dart';
+import 'package:perfumes_ecomerce/screens/checkout_screen.dart';
 
-// Para consumir o ChangeNotifier, vamos usar o pacote Provider.
-// Se ainda não adicionou, adicione ao seu pubspec.yaml:
-// dependencies:
-//   flutter:
-//     sdk: flutter
-//   provider: ^6.0.5 # ou a versão mais recente
 import 'package:provider/provider.dart';
 
 class CartScreen extends StatelessWidget {
@@ -16,8 +10,7 @@ class CartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Usamos Consumer para reconstruir apenas esta parte da árvore de widgets
-    // quando o CartManager notificar mudanças.
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meu Carrinho', style: TextStyle(color: Colors.black87)),
@@ -28,7 +21,7 @@ class CartScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.red),
             onPressed: () {
-              // Confirmação antes de limpar o carrinho
+              
               showDialog(
                 context: context,
                 builder: (BuildContext dialogContext) {
@@ -39,7 +32,7 @@ class CartScreen extends StatelessWidget {
                       TextButton(
                         child: const Text('Cancelar', style: TextStyle(color: Colors.black54)),
                         onPressed: () {
-                          Navigator.of(dialogContext).pop(); // Fecha o diálogo
+                          Navigator.of(dialogContext).pop();
                         },
                       ),
                       ElevatedButton(
@@ -47,7 +40,7 @@ class CartScreen extends StatelessWidget {
                         child: const Text('Limpar', style: TextStyle(color: Colors.white)),
                         onPressed: () {
                           Provider.of<CartManager>(context, listen: false).clearCart();
-                          Navigator.of(dialogContext).pop(); // Fecha o diálogo
+                          Navigator.of(dialogContext).pop();
                         },
                       ),
                     ],
@@ -139,7 +132,7 @@ class CartScreen extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                  // Contador de Quantidade no Carrinho
+                                  
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -164,7 +157,7 @@ class CartScreen extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            // Preço Total do Item
+                            
                             Column(
                               children: [
                                 Text(
@@ -191,7 +184,7 @@ class CartScreen extends StatelessWidget {
                   },
                 ),
               ),
-              // Resumo do Carrinho e Botão de Finalizar Compra
+              
               Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
@@ -219,7 +212,7 @@ class CartScreen extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: () {
                           if (cartManager.itemCount > 0) {
-                            // Navega para a tela de Checkout
+                            
                             Navigator.push(
                               context,
                               MaterialPageRoute(builder: (context) => const CheckoutScreen()),

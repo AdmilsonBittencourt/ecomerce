@@ -25,9 +25,8 @@ class Address {
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
+  Map<String, dynamic> toMap({bool forInsert = false}) {
+    final map = {
       'user_id': userId,
       'street': street,
       'number': number,
@@ -39,6 +38,10 @@ class Address {
       'is_default': isDefault ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
     };
+    if (!forInsert && id != null) {
+      map['id'] = id;
+    }
+    return map;
   }
 
   factory Address.fromMap(Map<String, dynamic> map) {

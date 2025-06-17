@@ -70,16 +70,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     });
 
     try {
-      // Atualizar usuário
+      
       final updatedUser = widget.currentUser.copyWith(
         name: _nameController.text,
         email: _emailController.text,
       );
       await _databaseHelper.updateUser(updatedUser.toMap());
 
-      // Atualizar ou criar endereço
+      
       final address = Address(
-        id: widget.currentAddress?.id ?? 0,
         userId: widget.currentUser.id!,
         street: _streetController.text,
         number: _numberController.text,
@@ -90,19 +89,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         zipCode: _zipCodeController.text,
       );
 
+      final addressMap = address.toMap();
+      addressMap.remove('id');
+
       if (widget.currentAddress == null) {
-        await _databaseHelper.insertAddress(address.toMap());
+        await _databaseHelper.insertAddress(addressMap);
       } else {
-        await _databaseHelper.updateAddress(address.toMap());
+        await _databaseHelper.updateAddress(addressMap);
       }
 
       if (mounted) {
         Navigator.pop(context, updatedUser);
       }
-    } catch (e) {
+    } catch (e, stack) {
+      print('Erro ao salvar endereço: $e');
+      print(stack);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Erro ao salvar alterações')),
+          SnackBar(content: Text('Erro ao salvar alterações: $e')),
         );
       }
     } finally {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-// Importa a tela de login que criaremos a seguir
 import 'package:perfumes_ecomerce/screens/login_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -9,25 +8,23 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Fundo branco para um toque minimalista
+      backgroundColor: Colors.white, 
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              // Título de Boas-Vindas
               Text(
                 'Bem-vindo à Perfumaria Essência',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87, // Cor escura para contraste
+                  color: Colors.black87, 
                 ),
               ),
-              const SizedBox(height: 16), // Espaçamento
-              // Subtítulo
+              const SizedBox(height: 16), 
               Text(
                 'Descubra sua fragrância perfeita.',
                 textAlign: TextAlign.center,
@@ -36,23 +33,21 @@ class WelcomeScreen extends StatelessWidget {
                   color: Colors.black54,
                 ),
               ),
-              const SizedBox(height: 48), // Espaçamento maior antes do botão
-              // Botão para iniciar
+              const SizedBox(height: 48), 
               ElevatedButton(
                 onPressed: () {
-                  // Navega para a tela de Login quando o botão é pressionado
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const LoginScreen()),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black87, // Fundo do botão escuro
-                  foregroundColor: Colors.white, // Texto do botão branco
+                  backgroundColor: Colors.black87, 
+                  foregroundColor: Colors.white, 
                   padding:
                       const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8), // Bordas arredondadas
+                    borderRadius: BorderRadius.circular(8), 
                   ),
                 ),
                 child: const Text(

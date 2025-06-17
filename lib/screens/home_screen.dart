@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:perfumes_ecomerce/screens/welcome_screen.dart'; // Importa a tela de boas-vindas para o logout
-import 'package:perfumes_ecomerce/models/perfume.dart'; // Importa nosso modelo de Perfume
-import 'package:perfumes_ecomerce/screens/profile_screen.dart'; // Importa a tela de perfil
-import 'package:perfumes_ecomerce/screens/product_detail_screen.dart'; // Importa a tela de detalhes do produto
-import 'package:perfumes_ecomerce/screens/cart_screen.dart'; // Importa a tela do carrinho
-import 'package:perfumes_ecomerce/screens/my_orders_screen.dart'; // Importa a tela de Meus Pedidos
-import 'package:perfumes_ecomerce/screens/filter_screen.dart'; // Importa a tela de filtros e o modelo PerfumeFilters
+import 'package:perfumes_ecomerce/screens/welcome_screen.dart';
+import 'package:perfumes_ecomerce/models/perfume.dart';
+import 'package:perfumes_ecomerce/screens/profile_screen.dart';
+import 'package:perfumes_ecomerce/screens/product_detail_screen.dart';
+import 'package:perfumes_ecomerce/screens/cart_screen.dart';
+import 'package:perfumes_ecomerce/screens/my_orders_screen.dart';
+import 'package:perfumes_ecomerce/screens/filter_screen.dart';
 
-// A Home Screen agora será um StatefulWidget para gerenciar o estado da pesquisa
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -16,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Lista original de todos os perfumes
+  
   final List<Perfume> _allPerfumes = [
     Perfume(
       id: 1,
@@ -111,19 +110,17 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   PerfumeFilters _currentFilters =
-      PerfumeFilters(); // Inicializa com filtros padrão (nenhum filtro ativo)
+      PerfumeFilters(); 
 
-  // Lista de perfumes que será exibida (filtrada pela pesquisa)
+  
   List<Perfume> _foundPerfumes = [];
   final TextEditingController _searchController = TextEditingController();
 
 @override
 void initState() {
   super.initState();
-  // Não precisamos mais do _foundPerfumes = _allPerfumes aqui,
-  // pois _filterPerfumes já fará isso se a pesquisa e filtros estiverem vazios.
+  
   _searchController.addListener(_onSearchChanged);
-  _filterPerfumes(_searchController.text); // Chama para aplicar os filtros iniciais
 }
 
   @override
@@ -133,12 +130,12 @@ void initState() {
     super.dispose();
   }
 
-  // Função chamada quando o texto da pesquisa muda
+  
   void _onSearchChanged() {
     _filterPerfumes(_searchController.text);
   }
 
-  // Lógica de filtragem dos perfumes
+  
   void _filterPerfumes(String searchTerm) {
     List<Perfume> results = [];
     if (searchTerm.isEmpty) {
@@ -150,19 +147,19 @@ void initState() {
           .toList();
     }
 
-    // Aplica os filtros adicionais
+    
     results = results.where((perfume) {
-      // Filtro por marca
+      
       if (_currentFilters.selectedBrands.isNotEmpty &&
           !_currentFilters.selectedBrands.contains(perfume.brand)) {
         return false;
       }
-      // Filtro por categoria (anteriormente gender)
+      
       if (_currentFilters.selectedGenders.isNotEmpty &&
           !_currentFilters.selectedGenders.contains(perfume.category)) {
         return false;
       }
-      // Filtro por faixa de preço
+      
       if (perfume.price < _currentFilters.priceRange.start ||
           perfume.price > _currentFilters.priceRange.end) {
         return false;
@@ -180,18 +177,18 @@ void initState() {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Perfumaria Essência',
-            style: TextStyle(color: Colors.black87)),
-        backgroundColor: Colors.white,
+            style: TextStyle(color: Colors.white)),
+        backgroundColor: Color(0xFF800020),
         elevation: 0,
-        // O leading (ícone de menu) é automaticamente adicionado quando um Drawer está presente
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           Stack(
-            // Usa Stack para sobrepor o ícone de filtro com um indicador
+            
             children: [
               IconButton(
-                icon: const Icon(Icons.filter_list, color: Colors.black87),
+                icon: const Icon(Icons.filter_list, color: Colors.white),
                 onPressed: () async {
-                  // Navega para a FilterScreen e espera o resultado
+                  
                   final selectedFilters = await Navigator.push<PerfumeFilters>(
                     context,
                     MaterialPageRoute(
@@ -199,26 +196,26 @@ void initState() {
                           FilterScreen(currentFilters: _currentFilters),
                     ),
                   );
-                  // Se o usuário aplicou filtros e não apenas voltou
+                  
                   if (selectedFilters != null) {
                     setState(() {
                       _currentFilters =
-                          selectedFilters; // Atualiza os filtros da Home
+                          selectedFilters; 
                     });
                     _filterPerfumes(_searchController
-                        .text); // Re-aplica a pesquisa e os novos filtros
+                        .text); 
                   }
                 },
               ),
               if (_currentFilters
-                  .hasActiveFilters) // Exibe um indicador se há filtros ativos
+                  .hasActiveFilters) 
                 Positioned(
                   right: 8,
                   top: 8,
                   child: Container(
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
-                      color: Colors.red, // Cor para o indicador de filtro ativo
+                      color: Colors.red, 
                       borderRadius: BorderRadius.circular(6),
                     ),
                     constraints: const BoxConstraints(
@@ -237,9 +234,9 @@ void initState() {
                 )
             ],
           ),
-          // Ícone de Perfil do Usuário
+          
           IconButton(
-            icon: const Icon(Icons.person_outline, color: Colors.black87),
+            icon: const Icon(Icons.person_outline, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
@@ -247,10 +244,10 @@ void initState() {
               );
             },
           ),
-          // Ícone de Carrinho de Compras
+          
           IconButton(
             icon:
-                const Icon(Icons.shopping_cart_outlined, color: Colors.black87),
+                const Icon(Icons.shopping_cart_outlined, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
@@ -260,13 +257,13 @@ void initState() {
           ),
         ],
       ),
-      // Adiciona o Drawer ao Scaffold
+      
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
             const DrawerHeader(
-              // Adicionado 'const' aqui
+              
               decoration: BoxDecoration(
                 color: Colors.black87,
               ),
@@ -277,7 +274,7 @@ void initState() {
                   Icon(Icons.person_pin, color: Colors.white, size: 48),
                   SizedBox(height: 8),
                   Text(
-                    'Olá, Usuário!', // Poderia ser o nome do usuário logado
+                    'Olá, Usuário!', 
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -291,15 +288,15 @@ void initState() {
               leading: const Icon(Icons.home_outlined),
               title: const Text('Home'),
               onTap: () {
-                Navigator.pop(context); // Fecha o drawer
-                // Já estamos na Home, então não faz nada além de fechar
+                Navigator.pop(context); 
+                
               },
             ),
             ListTile(
               leading: const Icon(Icons.person_outline),
               title: const Text('Meu Perfil'),
               onTap: () {
-                Navigator.pop(context); // Fecha o drawer
+                Navigator.pop(context); 
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -311,32 +308,32 @@ void initState() {
               leading: const Icon(Icons.history),
               title: const Text('Meus Pedidos'),
               onTap: () {
-                Navigator.pop(context); // Fecha o drawer
+                Navigator.pop(context); 
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const MyOrdersScreen()),
-                );
+                      builder: (context) => const MyOrdersScreen()), 
+                );  
               },
             ),
             ListTile(
               leading: const Icon(Icons.settings_outlined),
               title: const Text('Configurações'),
               onTap: () {
-                Navigator.pop(context); // Fecha o drawer
+                Navigator.pop(context); 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Navegar para Configurações')),
                 );
-                // TODO: Navegar para a tela de configurações
+
               },
             ),
-            const Divider(), // Uma linha divisória
+            const Divider(), 
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),
               title:
                   const Text('Sair', style: TextStyle(color: Colors.redAccent)),
               onTap: () {
-                Navigator.pop(context); // Fecha o drawer antes de sair
+                Navigator.pop(context); 
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(
@@ -350,9 +347,9 @@ void initState() {
       ),
       body: Column(
         crossAxisAlignment:
-            CrossAxisAlignment.start, // Alinha os filhos à esquerda
+            CrossAxisAlignment.start, 
         children: <Widget>[
-          // Campo de Pesquisa
+          
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -363,19 +360,19 @@ void initState() {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide:
-                      BorderSide.none, // Sem borda para um look mais limpo
+                      BorderSide.none, 
                 ),
                 filled: true,
                 fillColor: Colors
-                    .grey[200], // Fundo cinza claro para a barra de pesquisa
+                    .grey[200], 
                 contentPadding: const EdgeInsets.symmetric(vertical: 15.0),
               ),
               onChanged: (value) {
-                // A filtragem já está acontecendo no listener do _searchController
+                
               },
             ),
           ),
-          // Grade de Produtos
+          
           Expanded(
             child: _foundPerfumes.isEmpty
                 ? const Center(
@@ -385,18 +382,18 @@ void initState() {
                     ),
                   )
                 : GridView.builder(
-                    // Mantido o GridView.builder
+                    
                     padding:
-                        const EdgeInsets.all(16.0), // Padding em volta da grade
+                        const EdgeInsets.all(16.0), 
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // Duas colunas
+                      crossAxisCount: 2, 
                       crossAxisSpacing:
-                          16.0, // Espaçamento horizontal entre os itens
+                          16.0, 
                       mainAxisSpacing:
-                          16.0, // Espaçamento vertical entre as linhas
+                          16.0, 
                       childAspectRatio:
-                          0.7, // Proporção largura/altura de cada item
+                          0.7, 
                     ),
                     itemCount: _foundPerfumes.length,
                     itemBuilder: (context, index) {
@@ -408,31 +405,31 @@ void initState() {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: InkWell(
-                          // Permite que o card seja clicável
+                          
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ProductDetailScreen(
-                                    perfume: perfume), // Passa o objeto perfume
+                                    perfume: perfume), 
                               ),
                             );
                           },
                           child: Column(
-                            // Alterado para Column para empilhar imagem, nome e preço
+                            
                             crossAxisAlignment: CrossAxisAlignment
-                                .start, // Alinha o texto à esquerda
+                                .start, 
                             children: <Widget>[
                               Expanded(
-                                // A imagem ocupa o espaço disponível na altura
+                                
                                 child: ClipRRect(
                                   borderRadius: const BorderRadius.vertical(
                                       top: Radius.circular(
-                                          10)), // Apenas bordas superiores arredondadas
+                                          10)), 
                                   child: Image.network(
                                     perfume.imageUrl,
                                     width: double
-                                        .infinity, // Ocupa a largura total do card
+                                        .infinity, 
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
                                       return const Icon(
@@ -456,9 +453,9 @@ void initState() {
                                         fontWeight: FontWeight.bold,
                                         color: Colors.black87,
                                       ),
-                                      maxLines: 1, // Limita o texto a uma linha
+                                      maxLines: 1, 
                                       overflow: TextOverflow
-                                          .ellipsis, // Adiciona "..." se o texto for muito longo
+                                          .ellipsis, 
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -472,7 +469,7 @@ void initState() {
                                 ),
                               ),
                               Align(
-                                // Alinha o botão "adicionar" ao final do card
+                                
                                 alignment: Alignment.bottomRight,
                                 child: IconButton(
                                   icon: const Icon(Icons.add_shopping_cart,

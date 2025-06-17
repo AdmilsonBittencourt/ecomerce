@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:perfumes_ecomerce/order_manager.dart'; // Importa o gerenciador de pedidos
-import 'package:perfumes_ecomerce/models/order.dart'; // Importa o modelo Order
+import 'package:perfumes_ecomerce/order_manager.dart'; 
+import 'package:perfumes_ecomerce/models/order.dart'; 
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart'; // Para formatar a data
+import 'package:intl/intl.dart'; 
 
-// Adicione esta dependência ao seu pubspec.yaml se ainda não tiver:
-// dependencies:
-//   flutter:
-//     sdk: flutter
-//   intl: ^0.19.0 # ou a versão mais recente
 
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
@@ -21,7 +16,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   @override
   void initState() {
     super.initState();
-    // Carrega os pedidos quando a tela é aberta
+    
     Future.microtask(() => 
       Provider.of<OrderManager>(context, listen: false).loadUserOrders()
     );
@@ -78,7 +73,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Detalhes do Pedido #${order.id} (em breve!)')),
                     );
-                    // TODO: Navegar para uma tela de detalhes de pedido
+                    
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),

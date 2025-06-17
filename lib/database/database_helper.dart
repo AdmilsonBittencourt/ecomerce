@@ -1,5 +1,9 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:perfumes_ecomerce/models/user.dart';
+import 'package:perfumes_ecomerce/models/address.dart';
+import 'package:perfumes_ecomerce/models/order.dart';
+import 'package:perfumes_ecomerce/models/cart_item.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -116,6 +120,21 @@ class DatabaseHelper {
       return maps.first;
     }
     return null;
+  }
+
+  Future<User?> getUserByEmail(String email) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+
+    if (maps.isEmpty) {
+      return null;
+    }
+
+    return User.fromMap(maps.first);
   }
 
   // Métodos para Endereços

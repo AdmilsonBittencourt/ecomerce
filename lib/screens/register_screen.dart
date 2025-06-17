@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:perfumes_ecomerce/screens/home_screen.dart';
 import 'package:perfumes_ecomerce/screens/login_screen.dart';
 import 'package:perfumes_ecomerce/screens/welcome_screen.dart'; // Importa a tela principal (placeholder)
+import 'package:perfumes_ecomerce/database/database_helper.dart';
+import 'package:perfumes_ecomerce/models/user.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -11,16 +13,104 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _register() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    // Validação básica
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      setState(() {
+        _errorMessage = 'Por favor, preencha todos os campos.';
+      });
+      return;
+    }
+
+    if (password != confirmPassword) {
+      setState(() {
+        _errorMessage = 'As senhas não coincidem.';
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      setState(() {
+        _errorMessage = 'A senha deve ter pelo menos 6 caracteres.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // Verifica se o email já está em uso
+      final existingUser = await _databaseHelper.getUserByEmail(email);
+      if (existingUser != null) {
+        setState(() {
+          _errorMessage = 'Este email já está em uso.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Cria o novo usuário
+      final newUser = User(
+        name: name,
+        email: email,
+        password: password,
+      );
+
+      // Salva o usuário no banco de dados
+      await _databaseHelper.insertUser(newUser.toMap());
+
+      if (mounted) {
+        // Mostra mensagem de sucesso
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cadastro realizado com sucesso!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        // Navega para a tela de login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Erro ao realizar cadastro. Tente novamente.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -50,9 +140,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 48),
 
+              if (_errorMessage != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.red.shade700),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(color: Colors.red.shade700),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // Campo de Nome
+              TextField(
+                controller: _nameController,
+                enabled: !_isLoading,
+                decoration: InputDecoration(
+                  labelText: 'Nome',
+                  hintText: 'Seu nome completo',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.black26),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.black87, width: 2),
+                  ),
+                  prefixIcon: const Icon(Icons.person, color: Colors.black54),
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // Campo de Email
               TextField(
                 controller: _emailController,
+                enabled: !_isLoading,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   labelText: 'Email',
@@ -73,6 +207,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               // Campo de Senha
               TextField(
                 controller: _passwordController,
+                enabled: !_isLoading,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Senha',
@@ -93,6 +228,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               // Campo de Confirmar Senha
               TextField(
                 controller: _confirmPasswordController,
+                enabled: !_isLoading,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Confirmar Senha',
@@ -112,27 +248,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               // Botão de Registrar
               ElevatedButton(
-                onPressed: () {
-                  // TODO: Adicionar lógica de registro aqui
-                  final email = _emailController.text;
-                  final password = _passwordController.text;
-                  final confirmPassword = _confirmPasswordController.text;
-
-                  if (password != confirmPassword) {
-                    // Exibir uma mensagem de erro para o usuário
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('As senhas não coincidem!')),
-                    );
-                    return;
-                  }
-                  print('Email: $email, Senha: $password'); // Apenas para debug
-
-                  // Por enquanto, apenas navega para a tela Home
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-                  );
-                },
+                onPressed: _isLoading ? null : _register,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black87,
                   foregroundColor: Colors.white,
@@ -142,18 +258,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'Cadastrar',
-                  style: TextStyle(fontSize: 18),
-                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        'Cadastrar',
+                        style: TextStyle(fontSize: 18),
+                      ),
               ),
               const SizedBox(height: 16),
 
               // Texto para voltar para login
               TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Volta para a tela anterior (Login)
-                },
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        Navigator.pop(context);
+                      },
                 child: const Text(
                   'Já tem uma conta? Faça login',
                   style: TextStyle(color: Colors.black54, fontSize: 16),

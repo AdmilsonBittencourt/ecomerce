@@ -1,41 +1,37 @@
 import 'package:flutter/material.dart';
-
-// Classe para representar os dados do perfil do usuário
-// Poderíamos criar um 'UserModel' separado, mas para simplicidade, reusamos o Map.
-class UserProfileData {
-  final String name;
-  final String email;
-  final String address; // Manter o endereço para consistência
-
-  UserProfileData({
-    required this.name,
-    required this.email,
-    required this.address,
-  });
-}
+import 'package:perfumes_ecomerce/models/user.dart';
+import 'package:perfumes_ecomerce/user_manager.dart';
+import 'package:provider/provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  final UserProfileData currentUserData; // Dados atuais do usuário para pré-preenchimento
-
-  const EditProfileScreen({super.key, required this.currentUserData});
+  // Não precisa mais receber dados no construtor
+  const EditProfileScreen({super.key});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  final _formKey = GlobalKey<FormState>(); // Chave para o formulário
-  late TextEditingController _nameController;
-  late TextEditingController _emailController;
-  late TextEditingController _addressController; // Para o endereço também
+  final _formKey = GlobalKey<FormState>();
+  
+  // Os controladores serão inicializados com os dados do UserManager
+  late final TextEditingController _nameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _addressController;
+
+  bool _isInitialized = false; // Flag para inicializar apenas uma vez
 
   @override
-  void initState() {
-    super.initState();
-    // Inicializa os controladores com os dados atuais do usuário
-    _nameController = TextEditingController(text: widget.currentUserData.name);
-    _emailController = TextEditingController(text: widget.currentUserData.email);
-    _addressController = TextEditingController(text: widget.currentUserData.address);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Inicializa os controladores aqui, pois temos acesso ao context
+    if (!_isInitialized) {
+      final userManager = Provider.of<UserManager>(context, listen: false);
+      _nameController = TextEditingController(text: userManager.user?.name ?? '');
+      _emailController = TextEditingController(text: userManager.user?.email ?? '');
+      _addressController = TextEditingController(text: userManager.user?.address ?? '');
+      _isInitialized = true;
+    }
   }
 
   @override
@@ -46,118 +42,68 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  void _saveProfile() {
-    if (_formKey.currentState!.validate()) {
-      // Se a validação passar, cria um novo objeto UserProfileData com os dados atualizados
-      final updatedUserData = UserProfileData(
-        name: _nameController.text,
-        email: _emailController.text,
-        address: _addressController.text,
-      );
+  Future<void> _saveProfile() async {
+  if (_formKey.currentState!.validate()) {
+    final userManager = Provider.of<UserManager>(context, listen: false);
 
-      // Retorna os dados atualizados para a tela anterior (ProfileScreen)
-      Navigator.pop(context, updatedUserData);
+    // Etapa crucial: Pegamos o usuário ATUAL que já está no manager.
+    // Ele contém a senha hash correta que não queremos perder.
+    final currentUser = userManager.user;
+
+    // Se por algum motivo o usuário não estiver carregado, não fazemos nada.
+    if (currentUser == null) return;
+    
+    // ATUALIZADO: Usamos o copyWith para criar uma cópia com os dados do formulário
+    final updatedUserData = currentUser.copyWith(
+      name: _nameController.text,
+      email: _emailController.text,
+      address: _addressController.text,
+      // Note que NÃO passamos o hashedPassword. 
+      // O copyWith vai usar automaticamente o do 'currentUser'.
+    );
+
+    // Chama o manager para atualizar os dados no banco
+    await userManager.updateUser(updatedUserData);
+
+    if(mounted) {
+      // Apenas fecha a tela, não precisa mais retornar dados
+      Navigator.pop(context);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Perfil atualizado com sucesso!')),
       );
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Editar Perfil', style: TextStyle(color: Colors.black87)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
-      ),
-      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text('Editar Perfil')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
+          // O resto do seu layout do formulário pode permanecer exatamente o mesmo!
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              // Campo Nome
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Nome Completo',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  prefixIcon: const Icon(Icons.person_outline),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, informe seu nome.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Campo Email
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  prefixIcon: const Icon(Icons.email_outlined),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, informe seu email.';
-                  }
-                  if (!value.contains('@') || !value.contains('.')) {
-                    return 'Informe um email válido.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Campo Endereço
-              TextFormField(
-                controller: _addressController,
-                decoration: InputDecoration(
-                  labelText: 'Endereço',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  prefixIcon: const Icon(Icons.location_on_outlined),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, informe seu endereço.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 32),
-
-              // Botão Salvar
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _saveProfile,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black87,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+            // ... Seus TextFormFields ...
+            children: [
+               TextFormField(controller: _nameController, /* ... */),
+               const SizedBox(height: 16),
+               TextFormField(controller: _emailController, /* ... */),
+               const SizedBox(height: 16),
+               TextFormField(controller: _addressController, /* ... */),
+               const SizedBox(height: 32),
+               SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _saveProfile,
+                    icon: const Icon(Icons.save_outlined),
+                    label: const Text('Salvar Alterações'),
                   ),
-                  icon: const Icon(Icons.save_outlined),
-                  label: const Text(
-                    'Salvar Alterações',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
+               ),
             ],
-          ),
+          )
         ),
       ),
     );

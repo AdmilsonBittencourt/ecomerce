@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:perfumes_ecomerce/order_manager.dart'; // Importa o gerenciador de pedidos
-import 'package:perfumes_ecomerce/models/order.dart'; // Importa o modelo Order
+import 'package:perfumes_ecomerce/order_manager.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart'; // Para formatar a data
-
-// Adicione esta dependência ao seu pubspec.yaml se ainda não tiver:
-// dependencies:
-//   flutter:
-//     sdk: flutter
-//   intl: ^0.19.0 # ou a versão mais recente
+import 'package:intl/intl.dart';
+// Garanta que está importando o modelo correto
 
 class MyOrdersScreen extends StatelessWidget {
   const MyOrdersScreen({super.key});
@@ -17,14 +11,16 @@ class MyOrdersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Meus Pedidos', style: TextStyle(color: Colors.black87)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        title: const Text('Meus Pedidos'),
       ),
-      backgroundColor: Colors.white,
       body: Consumer<OrderManager>(
         builder: (context, orderManager, child) {
+          // 1. PRIMEIRO, verificamos se está carregando
+          if (orderManager.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          // 2. DEPOIS, verificamos se a lista está vazia
           if (orderManager.orders.isEmpty) {
             return const Center(
               child: Column(
@@ -32,40 +28,29 @@ class MyOrdersScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.assignment_outlined, size: 100, color: Colors.grey),
                   SizedBox(height: 16),
-                  Text(
-                    'Você ainda não fez nenhum pedido.',
-                    style: TextStyle(fontSize: 20, color: Colors.black54),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Comece a explorar nossos perfumes!',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
+                  Text('Você ainda não fez nenhum pedido.', style: TextStyle(fontSize: 18)),
                 ],
               ),
             );
           }
+
+          // 3. Se não está carregando e não está vazia, mostramos a lista
           return ListView.builder(
             padding: const EdgeInsets.all(16.0),
             itemCount: orderManager.orders.length,
             itemBuilder: (context, index) {
               final order = orderManager.orders[index];
-              // Formata a data para um formato legível
-              final dateFormatter = DateFormat('dd/MM/yyyy HH:mm');
-              final formattedDate = dateFormatter.format(order.orderDate);
+              final formattedDate = DateFormat('dd/MM/yyyy HH:mm').format(order.orderDate);
 
               return Card(
                 margin: const EdgeInsets.symmetric(vertical: 8.0),
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
                 child: InkWell(
                   onTap: () {
+                    // TODO: Navegar para uma tela de detalhes do pedido.
+                    // Ex: Navigator.push(context, MaterialPageRoute(builder: (_) => OrderDetailPage(order: order)));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Detalhes do Pedido ${order.id.substring(0, 8)} (em breve!)')),
+                      SnackBar(content: Text('Detalhes do Pedido #${order.id}')),
                     );
-                    // TODO: Navegar para uma tela de detalhes de pedido, passando o objeto order
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -73,33 +58,21 @@ class MyOrdersScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          'Pedido #${order.id.substring(0, 8).toUpperCase()}', // Mostra os primeiros 8 caracteres do ID
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
+                          'Pedido #${order.id}', // O ID agora é um int, então convertemos para string
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          'Data: $formattedDate',
-                          style: const TextStyle(fontSize: 14, color: Colors.black54),
-                        ),
+                        Text('Data: $formattedDate'),
                         const SizedBox(height: 4),
-                        Text(
-                          'Total: R\$ ${order.totalAmount.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                        Text('Itens: ${order.totalProductsInOrder} produtos'),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            'Total: R\$ ${order.totalAmount.toStringAsFixed(2)}',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Itens: ${order.totalProductsInOrder} produtos',
-                          style: const TextStyle(fontSize: 14, color: Colors.black54),
-                        ),
-                        // Você pode adicionar mais detalhes aqui, como status do pedido etc.
                       ],
                     ),
                   ),

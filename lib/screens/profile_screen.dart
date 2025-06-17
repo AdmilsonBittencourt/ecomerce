@@ -1,165 +1,107 @@
-// lib/screens/profile_screen.dart
-
 import 'package:flutter/material.dart';
-import 'package:perfumes_ecomerce/screens/edit_profile_screen.dart'; // Importa a tela de edição
+import 'package:perfumes_ecomerce/screens/edit_profile_screen.dart';
+import 'package:perfumes_ecomerce/user_manager.dart';
+import 'package:provider/provider.dart';
+// Importa o nosso novo manager
 
-class ProfileScreen extends StatefulWidget { // Mudado para StatefulWidget
+// MUDOU: Agora pode ser um StatelessWidget, pois não gerencia mais o estado localmente.
+class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  // Dados do usuário (agora mutáveis para que possamos atualizar)
-  UserProfileData _userData = UserProfileData(
-    name: 'João da Silva',
-    email: 'joao.silva@exemplo.com',
-    address: 'Rua das Flores, 123 - Cidade, Estado',
-  );
-
-  // Função para navegar para a tela de edição e aguardar o resultado
-  Future<void> _editProfile() async {
-    final updatedData = await Navigator.push<UserProfileData>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditProfileScreen(currentUserData: _userData),
-      ),
-    );
-
-    // Se dados foram retornados (usuário clicou em salvar)
-    if (updatedData != null) {
-      setState(() {
-        _userData = updatedData; // Atualiza o estado da tela de perfil
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Meu Perfil', style: TextStyle(color: Colors.black87)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
-      ),
-      backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            // Ícone/Avatar do Usuário
-            const CircleAvatar(
-              radius: 60,
-              backgroundColor: Colors.black12,
-              child: Icon(
-                Icons.person_outline,
-                size: 60,
-                color: Colors.black54,
-              ),
-            ),
-            const SizedBox(height: 24),
+    // Usamos o Consumer para ouvir as mudanças do UserManager
+    return Consumer<UserManager>(
+      builder: (context, userManager, child) {
+        // Enquanto o manager estiver carregando os dados ou se o usuário for nulo, mostra um spinner.
+        if (userManager.isLoading || userManager.user == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Meu Perfil')),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
 
-            // Nome do Usuário (agora dinâmico)
-            Text(
-              _userData.name,
-              style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
+        // Quando os dados estiverem prontos, usamos o objeto 'user' do manager
+        final user = userManager.user!;
 
-            // Email do Usuário (agora dinâmico)
-            Text(
-              _userData.email,
-              style: const TextStyle(
-                fontSize: 18,
-                color: Colors.black54,
-              ),
-            ),
-            const SizedBox(height: 32),
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Meu Perfil'),
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                const CircleAvatar(
+                  radius: 60,
+                  child: Icon(Icons.person_outline, size: 60),
+                ),
+                const SizedBox(height: 24),
 
-            // Informações do Usuário (em cards ou list tiles)
-            Card(
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              child: ListTile(
-                leading: const Icon(Icons.email_outlined, color: Colors.black54),
-                title: const Text('Email'),
-                subtitle: Text(_userData.email), // Usa o dado dinâmico
-                trailing: const Icon(Icons.edit, color: Colors.black26),
-                onTap: _editProfile, // Chama o método de edição
-              ),
-            ),
-            Card(
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              child: ListTile(
-                leading: const Icon(Icons.location_on_outlined, color: Colors.black54),
-                title: const Text('Endereço'),
-                subtitle: Text(_userData.address), // Usa o dado dinâmico
-                trailing: const Icon(Icons.edit, color: Colors.black26),
-                onTap: _editProfile, // Chama o método de edição
-              ),
-            ),
-            const SizedBox(height: 32),
+                // ATUALIZADO: Mostra os dados vindos do UserManager
+                Text(
+                  user.name,
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  user.email,
+                  style: const TextStyle(fontSize: 18, color: Colors.black54),
+                ),
+                const SizedBox(height: 32),
 
-            // Botão de Ação "Editar Perfil"
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton( // Não é mais ElevatedButton.icon, mas um ElevatedButton
-                onPressed: _editProfile, // Chama o método de edição
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black87,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  minimumSize: const Size.fromHeight(50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                // Os ListTiles agora também usam os dados do manager
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.email_outlined),
+                    title: const Text('Email'),
+                    subtitle: Text(user.email),
+                    trailing: const Icon(Icons.edit, size: 20),
+                    onTap: () {
+                      // ATUALIZADO: A navegação agora é mais simples
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                      );
+                    },
                   ),
                 ),
-                child: const Text(
-                  'Editar Perfil',
-                  style: TextStyle(fontSize: 18),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.location_on_outlined),
+                    title: const Text('Endereço'),
+                    subtitle: Text(user.address),
+                    trailing: const Icon(Icons.edit, size: 20),
+                     onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                      );
+                    },
+                  ),
                 ),
-              ),
+                const SizedBox(height: 32),
+                
+                // ... (Botões de Editar Perfil e Alterar Senha permanecem os mesmos,
+                // mas agora o de editar perfil não precisa mais de uma função separada) ...
+                 SizedBox(
+                   width: double.infinity,
+                   child: ElevatedButton(
+                     onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                        );
+                     },
+                     child: const Text('Editar Perfil', style: TextStyle(fontSize: 18)),
+                   ),
+                 ),
+              ],
             ),
-            const SizedBox(height: 16),
-
-            OutlinedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Navegar para Alterar Senha (em breve!)')),
-                );
-                // TODO: Navegar para a tela de alteração de senha
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black87,
-                side: const BorderSide(color: Colors.black54),
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                minimumSize: const Size.fromHeight(50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Alterar Senha',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

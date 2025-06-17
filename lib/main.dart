@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:perfumes_ecomerce/auth/auth_manager.dart';
 import 'package:perfumes_ecomerce/screens/login_screen.dart';
 import 'package:perfumes_ecomerce/screens/home_screen.dart';
+import 'package:perfumes_ecomerce/cart_manager.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,6 +17,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthManager()),
+        ChangeNotifierProvider(create: (_) => CartManager()),
       ],
       child: MaterialApp(
         title: 'Perfumes E-commerce',

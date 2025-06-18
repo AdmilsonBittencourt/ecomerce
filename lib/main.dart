@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:perfumes_ecomerce/cart_manager.dart';
 import 'package:perfumes_ecomerce/order_manager.dart';
-import 'package:perfumes_ecomerce/perfume_manager.dart';
-import 'package:perfumes_ecomerce/screens/auth_gate.dart';
-import 'package:perfumes_ecomerce/user_manager.dart';
 import 'package:provider/provider.dart';
+import 'package:perfumes_ecomerce/auth/auth_manager.dart';
+import 'package:perfumes_ecomerce/screens/login_screen.dart';
+import 'package:perfumes_ecomerce/screens/home_screen.dart';
+import 'package:perfumes_ecomerce/cart_manager.dart';
 
 void main() {
-  // Garante que os plugins do Flutter sejam inicializados antes de rodar o app.
-  // É uma boa prática, especialmente quando se lida com acesso a banco de dados.
-  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -18,44 +15,65 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Envolve todo o aplicativo com MultiProvider para disponibilizar múltiplos gerenciadores
     return MultiProvider(
       providers: [
-        // Registra todos os nossos "cérebros"
-        ChangeNotifierProvider(create: (_) => UserManager()),
-        ChangeNotifierProvider(create: (_) => PerfumeManager()),
+        ChangeNotifierProvider(create: (_) => AuthManager()),
         ChangeNotifierProvider(create: (_) => CartManager()),
-        ChangeNotifierProvider(create: (_) => OrderManager()),
+        ChangeNotifierProxyProvider<AuthManager, OrderManager>(
+          create: (context) {
+            final authManager = Provider.of<AuthManager>(context, listen: false);
+            return OrderManager(authManager.currentUser?.id ?? 0);
+          },
+          update: (context, authManager, previousOrderManager) {
+            previousOrderManager?.updateUserId(authManager.currentUser?.id ?? 0);
+            return previousOrderManager ?? OrderManager(authManager.currentUser?.id ?? 0);
+          },
+        ),
       ],
       child: MaterialApp(
-        title: 'Perfumaria Essência',
-        debugShowCheckedModeBanner: false,
+        title: 'Perfumes E-commerce',
         theme: ThemeData(
-          primarySwatch: Colors.grey, // Uma cor base neutra
-          scaffoldBackgroundColor: Colors.white,
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            iconTheme: IconThemeData(color: Colors.black87),
-            titleTextStyle: TextStyle(
-              color: Colors.black87,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black87,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
+          useMaterial3: true,
         ),
-        // ATUALIZADO: A tela inicial agora é o nosso "portão de autenticação"
-        home: const AuthGate(),
+        home: const AuthWrapper(),
+        routes: {
+          '/login': (context) => const LoginScreen(),
+          '/home': (context) => const HomeScreen(),
+        },
       ),
+    );
+  }
+}
+
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final authManager = Provider.of<AuthManager>(context, listen: false);
+    await authManager.checkLoginStatus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthManager>(
+      builder: (context, authManager, _) {
+        if (authManager.isLoggedIn) {
+          return const HomeScreen();
+        }
+        return const LoginScreen();
+      },
     );
   }
 }

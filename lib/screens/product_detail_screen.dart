@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:perfumes_ecomerce/cart_manager.dart';
 import 'package:perfumes_ecomerce/models/perfume.dart';
+import 'package:perfumes_ecomerce/cart_manager.dart';
 import 'package:provider/provider.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -14,44 +14,68 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _quantity = 1;
-  bool _isAddingToCart = false; // NOVO: Estado para controlar o carregamento
+  bool _isAddingToCart = false;
 
-  // A lógica de controle de quantidade está perfeita, sem mudanças
-  void _incrementQuantity() => setState(() => _quantity++);
-  void _decrementQuantity() {
-    if (_quantity > 1) {
-      setState(() => _quantity--);
-    }
+  double get _totalPrice => widget.perfume.price * _quantity;
+
+  void _incrementQuantity() {
+    setState(() {
+      _quantity++;
+    });
   }
 
-  /// NOVO: Método async para centralizar a lógica de adicionar ao carrinho.
-  Future<void> _addToCart() async {
-    // Não faz nada se já estiver adicionando
-    if (_isAddingToCart) return;
-
+  void _decrementQuantity() {
     setState(() {
-      _isAddingToCart = true; // Inicia o carregamento
+      if (_quantity > 1) {
+        _quantity--;
+      }
+    });
+  }
+
+  Future<void> _addToCart() async {
+    setState(() {
+      _isAddingToCart = true;
     });
 
     try {
-      final cartManager = Provider.of<CartManager>(context, listen: false);
-      // Espera a operação do banco de dados terminar
-      await cartManager.addItem(widget.perfume, _quantity);
+      await Provider.of<CartManager>(context, listen: false).addItem(
+        productId: widget.perfume.id,
+        productName: widget.perfume.name,
+        productImageUrl: widget.perfume.imageUrl,
+        productPrice: widget.perfume.price,
+      );
 
       if (mounted) {
-        final totalPrice = widget.perfume.price * _quantity;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('"${widget.perfume.name}" x $_quantity adicionado!'),
-            backgroundColor: Colors.green[700],
+            content: Text('"${widget.perfume.name}" adicionado ao carrinho!'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao adicionar ao carrinho: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
     } finally {
-      // Garante que o estado de carregamento seja desativado, mesmo se ocorrer um erro.
       if (mounted) {
         setState(() {
-          _isAddingToCart = false; // Finaliza o carregamento
+          _isAddingToCart = false;
         });
       }
     }
@@ -59,71 +83,141 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // O layout do seu widget está excelente, vamos mantê-lo.
-    // A única mudança será no botão "Adicionar".
     return Scaffold(
-      appBar: AppBar(title: Text(widget.perfume.name)),
+      appBar: AppBar(
+        title: Text(widget.perfume.name, style: const TextStyle(color: Colors.black87)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+      ),
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // ... (Imagem, Nome, Preço, Descrição - sem mudanças) ...
-             Center(child: ClipRRect(child: Image.network(widget.perfume.imageUrl, height: 300, fit: BoxFit.cover))),
-             const SizedBox(height: 24),
-             Text(widget.perfume.name, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-             const SizedBox(height: 8),
-             Text('R\$ ${widget.perfume.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20)),
-             const SizedBox(height: 24),
-             const Text('Descrição do perfume...', style: TextStyle(fontSize: 16)),
-             const SizedBox(height: 48),
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12.0),
+                child: Image.network(
+                  widget.perfume.imageUrl,
+                  height: 300,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.broken_image,
+                      size: 300,
+                      color: Colors.grey,
+                    );
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
 
-            // Layout do seletor de quantidade e botão
+            Text(
+              widget.perfume.name,
+              style: const TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            Text(
+              'R\$ ${widget.perfume.price.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            const Text(
+              'Este perfume exclusivo combina notas cítricas frescas com um coração floral delicado e um fundo amadeirado e almiscarado.',
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.5,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.justify,
+            ),
+            const SizedBox(height: 48),
+
             Row(
               children: <Widget>[
-                // --- Seletor de Quantidade (sem mudanças na lógica) ---
                 Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   decoration: BoxDecoration(
                     color: Colors.grey[100],
                     borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey[300]!),
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      IconButton(icon: const Icon(Icons.remove), onPressed: _decrementQuantity),
-                      Text('$_quantity', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      IconButton(icon: const Icon(Icons.add), onPressed: _incrementQuantity),
+                      IconButton(
+                        icon: const Icon(Icons.remove, color: Colors.black54, size: 20),
+                        onPressed: _isAddingToCart ? null : _decrementQuantity,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$_quantity',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.add, color: Colors.black54, size: 20),
+                        onPressed: _isAddingToCart ? null : _incrementQuantity,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
                     ],
-                  ),
+                  ), 
                 ),
                 const SizedBox(width: 16),
 
-                // --- Botão Adicionar ao Carrinho (ATUALIZADO) ---
                 Expanded(
                   child: ElevatedButton(
-                    // ATUALIZADO: Chama o novo método e desabilita durante o carregamento
                     onPressed: _isAddingToCart ? null : _addToCart,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 25),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      // Estilo para quando o botão estiver desabilitado
-                      disabledBackgroundColor: Colors.grey[700],
                     ),
                     child: _isAddingToCart
-                        ? const SizedBox( // Mostra um spinner de carregamento
-                            height: 22,
-                            width: 22,
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : const Text( // Mostra o texto normal
-                            'Adicionar',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              const Text(
+                                'Adicionar',
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                'R\$ ${_totalPrice.toStringAsFixed(2)}',
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ],
                           ),
                   ),
                 ),

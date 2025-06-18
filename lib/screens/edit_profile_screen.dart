@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:perfumes_ecomerce/models/user.dart';
-import 'package:perfumes_ecomerce/user_manager.dart';
-import 'package:provider/provider.dart';
+import 'package:perfumes_ecomerce/models/address.dart';
+import 'package:perfumes_ecomerce/database/database_helper.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  // Não precisa mais receber dados no construtor
-  const EditProfileScreen({super.key});
+  final User currentUser;
+  final Address? currentAddress;
+
+  const EditProfileScreen({
+    super.key,
+    required this.currentUser,
+    this.currentAddress,
+  });
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -13,24 +19,32 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  
-  // Os controladores serão inicializados com os dados do UserManager
-  late final TextEditingController _nameController;
-  late final TextEditingController _emailController;
-  late final TextEditingController _addressController;
-
-  bool _isInitialized = false; // Flag para inicializar apenas uma vez
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _numberController = TextEditingController();
+  final _complementController = TextEditingController();
+  final _neighborhoodController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _stateController = TextEditingController();
+  final _zipCodeController = TextEditingController();
+  final _databaseHelper = DatabaseHelper();
+  bool _isLoading = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Inicializa os controladores aqui, pois temos acesso ao context
-    if (!_isInitialized) {
-      final userManager = Provider.of<UserManager>(context, listen: false);
-      _nameController = TextEditingController(text: userManager.user?.name ?? '');
-      _emailController = TextEditingController(text: userManager.user?.email ?? '');
-      _addressController = TextEditingController(text: userManager.user?.address ?? '');
-      _isInitialized = true;
+  void initState() {
+    super.initState();
+    _nameController.text = widget.currentUser.name;
+    _emailController.text = widget.currentUser.email;
+    
+    if (widget.currentAddress != null) {
+      _streetController.text = widget.currentAddress!.street;
+      _numberController.text = widget.currentAddress!.number;
+      _complementController.text = widget.currentAddress!.complement!;
+      _neighborhoodController.text = widget.currentAddress!.neighborhood;
+      _cityController.text = widget.currentAddress!.city;
+      _stateController.text = widget.currentAddress!.state;
+      _zipCodeController.text = widget.currentAddress!.zipCode;
     }
   }
 
@@ -38,72 +52,255 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _addressController.dispose();
+    _streetController.dispose();
+    _numberController.dispose();
+    _complementController.dispose();
+    _neighborhoodController.dispose();
+    _cityController.dispose();
+    _stateController.dispose();
+    _zipCodeController.dispose();
     super.dispose();
   }
 
   Future<void> _saveProfile() async {
-  if (_formKey.currentState!.validate()) {
-    final userManager = Provider.of<UserManager>(context, listen: false);
+    if (!_formKey.currentState!.validate()) return;
 
-    // Etapa crucial: Pegamos o usuário ATUAL que já está no manager.
-    // Ele contém a senha hash correta que não queremos perder.
-    final currentUser = userManager.user;
+    setState(() {
+      _isLoading = true;
+    });
 
-    // Se por algum motivo o usuário não estiver carregado, não fazemos nada.
-    if (currentUser == null) return;
-    
-    // ATUALIZADO: Usamos o copyWith para criar uma cópia com os dados do formulário
-    final updatedUserData = currentUser.copyWith(
-      name: _nameController.text,
-      email: _emailController.text,
-      address: _addressController.text,
-      // Note que NÃO passamos o hashedPassword. 
-      // O copyWith vai usar automaticamente o do 'currentUser'.
-    );
-
-    // Chama o manager para atualizar os dados no banco
-    await userManager.updateUser(updatedUserData);
-
-    if(mounted) {
-      // Apenas fecha a tela, não precisa mais retornar dados
-      Navigator.pop(context);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Perfil atualizado com sucesso!')),
+    try {
+      
+      final updatedUser = widget.currentUser.copyWith(
+        name: _nameController.text,
+        email: _emailController.text,
       );
+      await _databaseHelper.updateUser(updatedUser.toMap());
+
+      
+      final address = Address(
+        userId: widget.currentUser.id!,
+        street: _streetController.text,
+        number: _numberController.text,
+        complement: _complementController.text,
+        neighborhood: _neighborhoodController.text,
+        city: _cityController.text,
+        state: _stateController.text,
+        zipCode: _zipCodeController.text,
+      );
+
+      final addressMap = address.toMap();
+      addressMap.remove('id');
+
+      if (widget.currentAddress == null) {
+        await _databaseHelper.insertAddress(addressMap);
+      } else {
+        await _databaseHelper.updateAddress(addressMap);
+      }
+
+      if (mounted) {
+        Navigator.pop(context, updatedUser);
+      }
+    } catch (e, stack) {
+      print('Erro ao salvar endereço: $e');
+      print(stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao salvar alterações: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Editar Perfil')),
+      appBar: AppBar(
+        title: const Text('Editar Perfil'),
+        actions: [
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.save),
+              onPressed: _saveProfile,
+            ),
+        ],
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          // O resto do seu layout do formulário pode permanecer exatamente o mesmo!
           child: Column(
-            // ... Seus TextFormFields ...
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-               TextFormField(controller: _nameController, /* ... */),
-               const SizedBox(height: 16),
-               TextFormField(controller: _emailController, /* ... */),
-               const SizedBox(height: 16),
-               TextFormField(controller: _addressController, /* ... */),
-               const SizedBox(height: 32),
-               SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _saveProfile,
-                    icon: const Icon(Icons.save_outlined),
-                    label: const Text('Salvar Alterações'),
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nome',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, insira seu nome';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, insira seu email';
+                  }
+                  if (!value.contains('@')) {
+                    return 'Por favor, insira um email válido';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Endereço',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _streetController,
+                decoration: const InputDecoration(
+                  labelText: 'Rua',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, insira a rua';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      controller: _numberController,
+                      decoration: const InputDecoration(
+                        labelText: 'Número',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, insira o número';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
-               ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 3,
+                    child: TextFormField(
+                      controller: _complementController,
+                      decoration: const InputDecoration(
+                        labelText: 'Complemento',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _neighborhoodController,
+                decoration: const InputDecoration(
+                  labelText: 'Bairro',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, insira o bairro';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: TextFormField(
+                      controller: _cityController,
+                      decoration: const InputDecoration(
+                        labelText: 'Cidade',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, insira a cidade';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      controller: _stateController,
+                      decoration: const InputDecoration(
+                        labelText: 'Estado',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, insira o estado';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _zipCodeController,
+                decoration: const InputDecoration(
+                  labelText: 'CEP',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, insira o CEP';
+                  }
+                  return null;
+                },
+              ),
             ],
-          )
+          ),
         ),
       ),
     );

@@ -1,74 +1,120 @@
-import 'package:flutter/material.dart';
-import 'package:perfumes_ecomerce/db/database_helper.dart';
+import 'package:flutter/foundation.dart';
+import 'package:perfumes_ecomerce/database/database_helper.dart';
 import 'package:perfumes_ecomerce/models/cart_item.dart';
-import 'package:perfumes_ecomerce/models/perfume.dart';
 
 class CartManager extends ChangeNotifier {
-  List<CartItem> _items = []; // A lista agora é um cache dos dados do banco.
-  bool isLoading = true;
-  // Getters continuam úteis para a UI
-  List<CartItem> get items => List.unmodifiable(_items);
-  
-  double get totalPrice {
-    return _items.fold(0.0, (sum, item) => sum + item.totalPrice);
-  }
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+  List<CartItem> _items = [];
+  int _currentUserId = 1; 
 
+  List<CartItem> get items => _items;
   int get itemCount => _items.length;
 
-  // Construtor: Ao iniciar o manager, busca os itens do carrinho
-  CartManager() {
-    fetchCartItems();
+  double get totalPrice {
+    return _items.fold(0, (sum, item) => sum + item.totalPrice);
   }
 
-  /// NOVO: Busca os itens do banco e atualiza o estado interno.
-  Future<void> fetchCartItems() async {
-    isLoading = true;
-    _items = await DatabaseHelper.instance.getCartItems();
-    isLoading = false;
-    notifyListeners(); // Notifica a UI que a lista de itens foi atualizada
+  Future<void> loadCartItems() async {
+    final items = await _dbHelper.getUserCartItems(_currentUserId);
+    _items = items.map((map) => CartItem.fromMap(map)).toList();
+    notifyListeners();
   }
 
-  /// REFATORADO: Adiciona o item através do DatabaseHelper
-  Future<void> addItem(Perfume perfume, int quantity) async {
-    // Cria um CartItem baseado nos modelos que definimos
-    final newItem = CartItem(
-      perfumeId: perfume.id,
-      name: perfume.name,
-      price: perfume.price,
-      imageUrl: perfume.imageUrl,
-      quantity: quantity,
-    );
-    
-    await DatabaseHelper.instance.addItem(newItem);
-    await fetchCartItems(); // Após modificar o banco, busca a lista atualizada
-  }
+  Future<void> addItem({
+    required int productId,
+    required String productName,
+    required String productImageUrl,
+    required double productPrice,
+  }) async {
+    final existingItemIndex = _items.indexWhere((item) => item.productId == productId);
 
-  /// REFATORADO: Remove o item pelo seu ID no banco
-  Future<void> removeItem(int cartItemId) async {
-    await DatabaseHelper.instance.removeItem(cartItemId);
-    await fetchCartItems();
-  }
-  
-  /// REFATORADO: Aumenta a quantidade
-  Future<void> incrementItemQuantity(CartItem item) async {
-    await DatabaseHelper.instance.updateItemQuantity(item.id!, item.quantity + 1);
-    await fetchCartItems();
-  }
-
-  /// REFATORADO: Diminui a quantidade ou remove
-  Future<void> decrementItemQuantity(CartItem item) async {
-    if (item.quantity > 1) {
-      await DatabaseHelper.instance.updateItemQuantity(item.id!, item.quantity - 1);
+    if (existingItemIndex >= 0) {
+      await incrementItemQuantity(productId);
     } else {
-      // Se a quantidade é 1, remover o item
-      await DatabaseHelper.instance.removeItem(item.id!);
+      final cartItem = CartItem(
+        userId: _currentUserId,
+        productId: productId,
+        productName: productName,
+        productImageUrl: productImageUrl,
+        productPrice: productPrice,
+        quantity: 1,
+      );
+
+      final id = await _dbHelper.insertCartItem(cartItem.toMap());
+      _items.add(CartItem(
+        id: id,
+        userId: _currentUserId,
+        productId: productId,
+        productName: productName,
+        productImageUrl: productImageUrl,
+        productPrice: productPrice,
+        quantity: 1,
+      ));
+      notifyListeners();
     }
-    await fetchCartItems();
   }
 
-  /// REFATORADO: Limpa o carrinho no banco de dados
+  Future<void> incrementItemQuantity(int productId) async {
+    final index = _items.indexWhere((item) => item.productId == productId);
+    if (index >= 0) {
+      final item = _items[index];
+      final newQuantity = item.quantity + 1;
+      
+      await _dbHelper.updateCartItemQuantity(item.id!, newQuantity);
+      
+      _items[index] = CartItem(
+        id: item.id,
+        userId: item.userId,
+        productId: item.productId,
+        productName: item.productName,
+        productImageUrl: item.productImageUrl,
+        productPrice: item.productPrice,
+        quantity: newQuantity,
+        createdAt: item.createdAt,
+      );
+      notifyListeners();
+    }
+  }
+
+  Future<void> decrementItemQuantity(int productId) async {
+    final index = _items.indexWhere((item) => item.productId == productId);
+    if (index >= 0) {
+      final item = _items[index];
+      if (item.quantity > 1) {
+        final newQuantity = item.quantity - 1;
+        
+        await _dbHelper.updateCartItemQuantity(item.id!, newQuantity);
+        
+        _items[index] = CartItem(
+          id: item.id,
+          userId: item.userId,
+          productId: item.productId,
+          productName: item.productName,
+          productImageUrl: item.productImageUrl,
+          productPrice: item.productPrice,
+          quantity: newQuantity,
+          createdAt: item.createdAt,
+        );
+        notifyListeners();
+      } else {
+        await removeItem(productId);
+      }
+    }
+  }
+
+  Future<void> removeItem(int productId) async {
+    final index = _items.indexWhere((item) => item.productId == productId);
+    if (index >= 0) {
+      final item = _items[index];
+      await _dbHelper.deleteCartItem(item.id!);
+      _items.removeAt(index);
+      notifyListeners();
+    }
+  }
+
   Future<void> clearCart() async {
-    await DatabaseHelper.instance.clearCart();
-    await fetchCartItems();
+    await _dbHelper.clearUserCart(_currentUserId);
+    _items.clear();
+    notifyListeners();
   }
 }

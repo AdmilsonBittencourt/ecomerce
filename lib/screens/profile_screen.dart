@@ -1,107 +1,267 @@
+
 import 'package:flutter/material.dart';
 import 'package:perfumes_ecomerce/screens/edit_profile_screen.dart';
-import 'package:perfumes_ecomerce/user_manager.dart';
+import 'package:perfumes_ecomerce/database/database_helper.dart';
+import 'package:perfumes_ecomerce/models/user.dart';
+import 'package:perfumes_ecomerce/models/address.dart';
+import 'package:perfumes_ecomerce/auth/auth_manager.dart';
 import 'package:provider/provider.dart';
-// Importa o nosso novo manager
 
-// MUDOU: Agora pode ser um StatelessWidget, pois não gerencia mais o estado localmente.
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Usamos o Consumer para ouvir as mudanças do UserManager
-    return Consumer<UserManager>(
-      builder: (context, userManager, child) {
-        // Enquanto o manager estiver carregando os dados ou se o usuário for nulo, mostra um spinner.
-        if (userManager.isLoading || userManager.user == null) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Meu Perfil')),
-            body: const Center(child: CircularProgressIndicator()),
-          );
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  bool _isLoading = true;
+  User? _user;
+  Address? _address;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final authManager = Provider.of<AuthManager>(context, listen: false);
+      final currentUser = authManager.currentUser;
+
+      if (currentUser == null) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Usuário não está logado.';
+            _isLoading = false;
+          });
         }
+        return;
+      }
 
-        // Quando os dados estiverem prontos, usamos o objeto 'user' do manager
-        final user = userManager.user!;
+      final user = await _databaseHelper.getUser(currentUser.id!);
+      if (user == null) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Usuário não encontrado.';
+            _isLoading = false;
+          });
+        }
+        return;
+      }
 
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Meu Perfil'),
+      final address = await _databaseHelper.getUserAddress(currentUser.id!);
+
+      if (mounted) {
+        setState(() {
+          _user = user;
+          _address = address;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Erro ao carregar dados do usuário: ${e.toString()}';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _editProfile() async {
+    if (_user == null) return;
+
+    final updatedUser = await Navigator.push<User>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(
+          currentUser: _user!,
+          currentAddress: _address,
+        ),
+      ),
+    );
+
+    if (updatedUser != null) {
+      await _loadUserData(); 
+    }
+  }
+
+  Future<void> _changePassword() async {
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Funcionalidade em desenvolvimento')),
+    );
+  }
+
+  Future<void> _logout() async {
+    final authManager = Provider.of<AuthManager>(context, listen: false);
+    await authManager.logout();
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/login');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Meu Perfil', style: TextStyle(color: Colors.black87)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _logout,
           ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                const CircleAvatar(
-                  radius: 60,
-                  child: Icon(Icons.person_outline, size: 60),
-                ),
-                const SizedBox(height: 24),
+        ],
+      ),
+      backgroundColor: Colors.white,
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : _errorMessage != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 48, color: Colors.red.shade700),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(color: Colors.red.shade700),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadUserData,
+                        child: const Text('Tentar Novamente'),
+                      ),
+                    ],
+                  ),
+                )
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      const CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.black12,
+                        child: Icon(
+                          Icons.person_outline,
+                          size: 60,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
 
-                // ATUALIZADO: Mostra os dados vindos do UserManager
-                Text(
-                  user.name,
-                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  user.email,
-                  style: const TextStyle(fontSize: 18, color: Colors.black54),
-                ),
-                const SizedBox(height: 32),
+                      Text(
+                        _user?.name ?? 'Nome não disponível',
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
 
-                // Os ListTiles agora também usam os dados do manager
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.email_outlined),
-                    title: const Text('Email'),
-                    subtitle: Text(user.email),
-                    trailing: const Icon(Icons.edit, size: 20),
-                    onTap: () {
-                      // ATUALIZADO: A navegação agora é mais simples
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-                      );
-                    },
+                      Text(
+                        _user?.email ?? 'Email não disponível',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      Card(
+                        elevation: 1,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: ListTile(
+                          leading: const Icon(Icons.email_outlined, color: Colors.black54),
+                          title: const Text('Email'),
+                          subtitle: Text(_user?.email ?? 'Não definido'),
+                          trailing: const Icon(Icons.edit, color: Colors.black26),
+                          onTap: _editProfile,
+                        ),
+                      ),
+                      Card(
+                        elevation: 1,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: ListTile(
+                          leading: const Icon(Icons.location_on_outlined, color: Colors.black54),
+                          title: const Text('Endereço'),
+                          subtitle: Text(
+                            _address != null
+                                ? '${_address!.street}, ${_address!.number}${_address!.complement?.isNotEmpty == true ? ' - ${_address!.complement}' : ''}\n${_address!.neighborhood}, ${_address!.city} - ${_address!.state}\nCEP: ${_address!.zipCode}'
+                                : 'Endereço não cadastrado',
+                          ),
+                          trailing: const Icon(Icons.edit, color: Colors.black26),
+                          onTap: _editProfile,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _editProfile,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black87,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                            minimumSize: const Size.fromHeight(50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'Editar Perfil',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      OutlinedButton(
+                        onPressed: _changePassword,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.black87,
+                          side: const BorderSide(color: Colors.black54),
+                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                          minimumSize: const Size.fromHeight(50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Alterar Senha',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.location_on_outlined),
-                    title: const Text('Endereço'),
-                    subtitle: Text(user.address),
-                    trailing: const Icon(Icons.edit, size: 20),
-                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 32),
-                
-                // ... (Botões de Editar Perfil e Alterar Senha permanecem os mesmos,
-                // mas agora o de editar perfil não precisa mais de uma função separada) ...
-                 SizedBox(
-                   width: double.infinity,
-                   child: ElevatedButton(
-                     onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-                        );
-                     },
-                     child: const Text('Editar Perfil', style: TextStyle(fontSize: 18)),
-                   ),
-                 ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

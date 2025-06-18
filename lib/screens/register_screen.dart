@@ -1,11 +1,9 @@
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
-import 'package:perfumes_ecomerce/db/database_helper.dart';
-import 'package:perfumes_ecomerce/models/user.dart';
 import 'package:perfumes_ecomerce/screens/home_screen.dart';
-import 'package:perfumes_ecomerce/user_manager.dart';
-import 'package:provider/provider.dart';
+import 'package:perfumes_ecomerce/screens/login_screen.dart';
+import 'package:perfumes_ecomerce/screens/welcome_screen.dart'; 
+import 'package:perfumes_ecomerce/database/database_helper.dart';
+import 'package:perfumes_ecomerce/models/user.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,72 +13,102 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _formKey = GlobalKey<FormState>(); // Chave para validação
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
   bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
-    // ... dispose dos controladores ...
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _register() async {
-    // Valida o formulário
-    if (!_formKey.currentState!.validate()) {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      setState(() {
+        _errorMessage = 'Por favor, preencha todos os campos.';
+      });
       return;
     }
-    
-    setState(() { _isLoading = true; });
+
+    if (password != confirmPassword) {
+      setState(() {
+        _errorMessage = 'As senhas não coincidem.';
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      setState(() {
+        _errorMessage = 'A senha deve ter pelo menos 6 caracteres.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
     try {
-      final email = _emailController.text;
-      final password = _passwordController.text;
-
-      // 1. Criar o hash da senha
-      final hashedPassword = sha256.convert(utf8.encode(password)).toString();
-
-      // 2. Criar o objeto UserModel (o endereço e nome serão editados depois)
-      final newUser = UserModel(
-        id: 1, // Nosso app é single-user, então o ID é sempre 1
-        name: "Novo Usuário", // Um nome padrão
-        email: email,
-        address: "Não definido", // Um endereço padrão
-        hashedPassword: hashedPassword,
-      );
       
-      // 3. Chamar o DatabaseHelper para registrar
-      final registeredUser = await DatabaseHelper.instance.registerUser(newUser);
+      final existingUser = await _databaseHelper.getUserByEmail(email);
+      if (existingUser != null) {
+        setState(() {
+          _errorMessage = 'Este email já está em uso.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      
+      final newUser = User(
+        name: name,
+        email: email,
+        password: password,
+      );
+
+      
+      await _databaseHelper.insertUser(newUser.toMap());
 
       if (mounted) {
-        if (registeredUser != null) {
-          // Opcional: logar automaticamente o usuário após o registro
-          await Provider.of<UserManager>(context, listen: false).fetchUser();
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Registro realizado com sucesso!'), backgroundColor: Colors.green),
-          );
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Este email já está em uso!'), backgroundColor: Colors.red),
-          );
-        }
-      }
-    } catch (e) {
-      if(mounted) {
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ocorreu um erro: $e'), backgroundColor: Colors.red),
+          const SnackBar(
+            content: Text('Cadastro realizado com sucesso!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Erro ao realizar cadastro. Tente novamente.';
+      });
     } finally {
-      if(mounted) {
-        setState(() { _isLoading = false; });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -88,69 +116,177 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Registrar')),
+      appBar: AppBar(
+        title: const Text('Registrar', style: TextStyle(color: Colors.black87)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+      ),
+      backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          // ATUALIZADO: Usando um Form para validação
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const Text('Crie sua conta', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 48),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              
+              const Text(
+                'Crie sua conta',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 48),
 
-                // ATUALIZADO: TextFormField com validação
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
-                  validator: (value) {
-                    if (value == null || value.isEmpty || !value.contains('@')) {
-                      return 'Por favor, insira um email válido.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Senha', prefixIcon: Icon(Icons.lock)),
-                   validator: (value) {
-                    if (value == null || value.isEmpty || value.length < 6) {
-                      return 'A senha deve ter pelo menos 6 caracteres.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Confirmar Senha', prefixIcon: Icon(Icons.lock_reset)),
-                   validator: (value) {
-                    if (value != _passwordController.text) {
-                      return 'As senhas não coincidem.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  // ATUALIZADO: Lógica do botão
-                  onPressed: _isLoading ? null : _register,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
+              if (_errorMessage != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
                   ),
-                  child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Cadastrar', style: TextStyle(fontSize: 18)),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.red.shade700),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(color: Colors.red.shade700),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                // ... (seu TextButton para voltar para o login) ...
-              ],
-            ),
+
+              
+              TextField(
+                controller: _nameController,
+                enabled: !_isLoading,
+                decoration: InputDecoration(
+                  labelText: 'Nome',
+                  hintText: 'Seu nome completo',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.black26),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.black87, width: 2),
+                  ),
+                  prefixIcon: const Icon(Icons.person, color: Colors.black54),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              
+              TextField(
+                controller: _emailController,
+                enabled: !_isLoading,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'seuemail@exemplo.com',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.black26),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.black87, width: 2),
+                  ),
+                  prefixIcon: const Icon(Icons.email, color: Colors.black54),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              
+              TextField(
+                controller: _passwordController,
+                enabled: !_isLoading,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Senha',
+                  hintText: 'Sua senha secreta',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.black26),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.black87, width: 2),
+                  ),
+                  prefixIcon: const Icon(Icons.lock, color: Colors.black54),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Campo de Confirmar Senha
+              TextField(
+                controller: _confirmPasswordController,
+                enabled: !_isLoading,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Confirmar Senha',
+                  hintText: 'Repita sua senha',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.black26),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.black87, width: 2),
+                  ),
+                  prefixIcon: const Icon(Icons.lock_reset, color: Colors.black54),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Botão de Registrar
+              ElevatedButton(
+                onPressed: _isLoading ? null : _register,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black87,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  minimumSize: const Size.fromHeight(50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        'Cadastrar',
+                        style: TextStyle(fontSize: 18),
+                      ),
+              ),
+              const SizedBox(height: 16),
+
+              // Texto para voltar para login
+              TextButton(
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        Navigator.pop(context);
+                      },
+                child: const Text(
+                  'Já tem uma conta? Faça login',
+                  style: TextStyle(color: Colors.black54, fontSize: 16),
+                ),
+              ),
+            ],
           ),
         ),
       ),

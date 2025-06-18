@@ -151,7 +151,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         const SnackBar(content: Text('Pedido Finalizado com Sucesso!')),
       );
 
-      Navigator.popUntil(context, (route) => route.isFirst);
+      Navigator.of(context).pushReplacementNamed('/home');
     } catch (e, stack) {
       print('Erro ao salvar pedido: $e');
       print(stack);
